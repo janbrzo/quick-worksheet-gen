@@ -5,6 +5,7 @@ import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus } from '@/types/worksheet';
+import { FileText } from 'lucide-react';
 
 const Index = () => {
   const {
