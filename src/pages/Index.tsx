@@ -1,5 +1,4 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import WorksheetForm from '@/components/WorksheetForm';
 import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
@@ -28,79 +27,162 @@ const Index = () => {
   // State for payment dialog
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [promoCode, setPromoCode] = useState('');
+  const [paymentComplete, setPaymentComplete] = useState(false);
+  
+  // State for generation modal
+  const [showGenerationModal, setShowGenerationModal] = useState(false);
   
   // State for worksheet view (student/teacher)
   const [worksheetView, setWorksheetView] = useState<WorksheetView>(WorksheetView.STUDENT);
 
+  // For PDF generation
+  const studentContentRef = useRef<HTMLDivElement>(null);
+  const teacherContentRef = useRef<HTMLDivElement>(null);
+  
   // Function to handle page switching
   const goToPage = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+  
+  // Effect to show generation modal
+  useEffect(() => {
+    if (generationStatus === GenerationStatus.GENERATING) {
+      setShowGenerationModal(true);
+    } else if (generationStatus === GenerationStatus.COMPLETED) {
+      // Close modal after a slight delay when generation is complete
+      setTimeout(() => {
+        setShowGenerationModal(false);
+      }, 1000);
+    }
+  }, [generationStatus]);
   
   // Function to handle download with payment or promo
   const handleDownloadWithPayment = () => {
     if (promoCode.toLowerCase() === 'edooqoo') {
       // Apply promo code
       toast.success('Promo code applied! Downloading worksheet...');
+      setPaymentComplete(true);
       downloadWorksheet();
       setPaymentDialogOpen(false);
     } else {
       // Redirect to Stripe payment link
       window.open('https://buy.stripe.com/dR69BW5Oq4MC52w9AA', '_blank');
       toast.info('Redirecting to payment page. After payment, return to download your worksheet.');
+      
+      // For demo purposes, we'll simulate payment completion
+      // In a real app, this would be handled by a webhook from Stripe
+      setTimeout(() => {
+        setPaymentComplete(true);
+        toast.success('Payment received! You can now download your worksheet.');
+      }, 5000);
+      
       setPaymentDialogOpen(false);
     }
   };
   
   // Function to simulate PDF download
-  const downloadWorksheet = () => {
+  const downloadWorksheet = async () => {
     try {
-      // This will actually generate and download a real PDF
-      if (!contentRef.current) {
+      if (!studentContentRef.current && !teacherContentRef.current) {
         toast.error("Could not find content to download");
         return;
       }
       
       // Display processing message
-      toast.success('Your worksheet is being prepared for download');
+      toast.success('Your worksheets are being prepared for download');
       
-      // Create a proper filename
-      const filename = `worksheet-${formData.lessonTopic.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`;
+      // Create a proper filename based on view mode
+      const baseFilename = `worksheet-${formData.lessonTopic.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
       
-      // Use html2canvas and jsPDF to generate the PDF
-      import('html2canvas').then(html2canvasModule => {
-        const html2canvas = html2canvasModule.default;
-        html2canvas(contentRef.current, {
-          scale: 2, // Higher scale for better quality
+      // Import required libraries
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+      
+      const html2canvas = html2canvasModule.default;
+      const jsPDF = jsPDFModule.default;
+      
+      // Download student view first
+      if (studentContentRef.current) {
+        const studentCanvas = await html2canvas(studentContentRef.current, {
+          scale: 2,
           useCORS: true,
-          logging: false
-        }).then(canvas => {
-          import('jspdf').then(jsPDFModule => {
-            // Fix: Correct way to import jsPDF
-            const jsPDF = jsPDFModule.default;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const imgData = canvas.toDataURL('image/png');
-            const imgWidth = 210; // A4 width in mm
-            const imgHeight = canvas.height * imgWidth / canvas.width;
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-            pdf.save(filename);
-            
-            toast.success('Worksheet downloaded successfully!');
-          });
+          logging: false,
+          windowWidth: 1200,
+          windowHeight: 1600,
+          allowTaint: true
         });
-      }).catch(err => {
-        console.error("PDF generation error:", err);
-        toast.error("Error generating PDF. Please try again.");
-      });
+        
+        const studentPdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = studentCanvas.toDataURL('image/png');
+        const imgWidth = 210; // A4 width in mm
+        const imgHeight = studentCanvas.height * imgWidth / studentCanvas.width;
+        const pageHeight = 295; // A4 height in mm
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        // First page
+        studentPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        // Additional pages if needed
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          studentPdf.addPage();
+          studentPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+        
+        studentPdf.save(`${baseFilename}-student.pdf`);
+      }
+      
+      // Download teacher view next (if different)
+      if (teacherContentRef.current && worksheetView === WorksheetView.TEACHER) {
+        setTimeout(async () => {
+          const teacherCanvas = await html2canvas(teacherContentRef.current, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            windowWidth: 1200,
+            windowHeight: 1600,
+            allowTaint: true
+          });
+          
+          const teacherPdf = new jsPDF('p', 'mm', 'a4');
+          const imgData = teacherCanvas.toDataURL('image/png');
+          const imgWidth = 210; // A4 width in mm
+          const imgHeight = teacherCanvas.height * imgWidth / teacherCanvas.width;
+          const pageHeight = 295; // A4 height in mm
+          
+          let heightLeft = imgHeight;
+          let position = 0;
+          
+          // First page
+          teacherPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+          
+          // Additional pages if needed
+          while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            teacherPdf.addPage();
+            teacherPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+          }
+          
+          teacherPdf.save(`${baseFilename}-teacher.pdf`);
+          
+          toast.success('Both worksheets downloaded successfully!');
+        }, 1000);
+      } else {
+        toast.success('Worksheet downloaded successfully!');
+      }
     } catch (err) {
       console.error("Download error:", err);
       toast.error("Error downloading worksheet. Please try again.");
     }
   };
-
-  // For PDF generation
-  const contentRef = React.useRef<HTMLDivElement>(null);
 
   // Disable printing
   React.useEffect(() => {
@@ -129,9 +211,18 @@ const Index = () => {
     };
   }, []);
 
+  // Keep track of both content refs
+  const saveContentRefs = (ref) => {
+    if (worksheetView === WorksheetView.STUDENT) {
+      studentContentRef.current = ref;
+    } else {
+      teacherContentRef.current = ref;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-edu-dark text-white py-4">
+      <header className="bg-edu-dark text-white py-6">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div>
@@ -164,165 +255,200 @@ const Index = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {currentPage === 1 && (
-          <div className="max-w-5xl mx-auto">
-            <WorksheetForm
-              formData={formData}
-              updateField={updateField}
-              generateWorksheet={() => {
-                generateWorksheet();
-                if (generationStatus !== GenerationStatus.ERROR) {
-                  goToPage(2);
-                }
-              }}
-              resetForm={resetForm}
-              generationStatus={generationStatus}
-            />
-          </div>
-        )}
-        
-        {currentPage === 2 && (
-          <div className="max-w-5xl mx-auto">
-            <div className="mb-6">
-              <button 
-                onClick={() => goToPage(1)} 
-                className="text-edu-primary hover:text-edu-dark flex items-center gap-1"
-              >
-                ← Back to Form
-              </button>
+      <div className="container mx-auto px-4 pt-8 pb-16">
+        {/* Features section with descriptions */}
+        <section className="max-w-5xl mx-auto mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-3 rounded-full bg-edu-light inline-block mb-3">
+                <Clock className="text-edu-primary h-7 w-7" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Save Time</h3>
+              <p className="text-gray-600 text-sm">Create in 5 minutes what would normally take 1-2 hours</p>
             </div>
             
-            <GenerationProgress 
-              status={generationStatus} 
-              duration={15}
-              steps={generationSteps}
-              currentTime={generationTime}
-            />
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-3 rounded-full bg-edu-light inline-block mb-3">
+                <Award className="text-edu-primary h-7 w-7" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Tailored Content</h3>
+              <p className="text-gray-600 text-sm">Specific, industry-focused exercises for your students</p>
+            </div>
             
-            {worksheetData && generationStatus === GenerationStatus.COMPLETED && (
-              <div>
-                <div className="mb-4 bg-white p-5 rounded-lg shadow-md border-l-4 border-edu-primary">
-                  <h2 className="text-xl font-bold mb-4 text-edu-dark">Lesson Brief</h2>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-                        <span className="font-bold text-edu-primary block mb-1">Duration:</span> 
-                        <span className="text-edu-dark text-lg">{formData.lessonDuration} minutes</span>
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-3 rounded-full bg-edu-light inline-block mb-3">
+                <FileCheck className="text-edu-primary h-7 w-7" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Ready to Use</h3>
+              <p className="text-gray-600 text-sm">Professional formats requiring minimal edits (< 10%)</p>
+            </div>
+            
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="p-3 rounded-full bg-edu-light inline-block mb-3">
+                <Edit className="text-edu-primary h-7 w-7" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Customizable</h3>
+              <p className="text-gray-600 text-sm">Edit worksheet content to fit your specific needs</p>
+            </div>
+          </div>
+        </section>
+        
+        <main className="max-w-6xl mx-auto">
+          {currentPage === 1 && (
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="md:order-1">
+                <WorksheetForm
+                  formData={formData}
+                  updateField={updateField}
+                  generateWorksheet={() => {
+                    generateWorksheet();
+                    if (generationStatus !== GenerationStatus.ERROR) {
+                      setTimeout(() => goToPage(2), 5000); // Wait for generation to complete
+                    }
+                  }}
+                  resetForm={resetForm}
+                  generationStatus={generationStatus}
+                />
+              </div>
+              
+              <div className="md:order-2">
+                <div className="bg-white p-8 rounded-lg shadow-md h-full flex flex-col items-center justify-center text-center">
+                  <div className="bg-edu-light p-6 rounded-full mb-6">
+                    <FileText size={48} className="text-edu-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold mb-4 text-edu-dark">
+                    Your worksheet will appear here
+                  </h2>
+                  <p className="text-gray-600 max-w-md">
+                    Fill out the form and click "Generate worksheet" to create
+                    a personalized teaching material for your English lesson.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {currentPage === 2 && (
+            <div>
+              <div className="mb-6">
+                <button 
+                  onClick={() => goToPage(1)} 
+                  className="text-edu-primary hover:text-edu-dark flex items-center gap-1"
+                >
+                  ← Back to Form
+                </button>
+              </div>
+              
+              {worksheetData && generationStatus === GenerationStatus.COMPLETED && (
+                <div>
+                  <div className="mb-4 bg-white p-5 rounded-lg shadow-md border-l-4 border-edu-primary">
+                    <h2 className="text-xl font-bold mb-4 text-edu-dark">Lesson Brief</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                          <span className="font-bold text-edu-primary block mb-1">Duration:</span> 
+                          <span className="text-edu-dark text-lg">{formData.lessonDuration} minutes</span>
+                        </div>
+                        
+                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                          <span className="font-bold text-edu-primary block mb-1">Topic:</span> 
+                          <span className="text-edu-dark text-lg">{formData.lessonTopic}</span>
+                        </div>
+                        
+                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                          <span className="font-bold text-edu-primary block mb-1">Objective:</span> 
+                          <span className="text-edu-dark text-lg">{formData.lessonObjective}</span>
+                        </div>
                       </div>
                       
-                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-                        <span className="font-bold text-edu-primary block mb-1">Topic:</span> 
-                        <span className="text-edu-dark text-lg">{formData.lessonTopic}</span>
-                      </div>
-                      
-                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-                        <span className="font-bold text-edu-primary block mb-1">Objective:</span> 
-                        <span className="text-edu-dark text-lg">{formData.lessonObjective}</span>
+                      <div className="space-y-4">
+                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                          <span className="font-bold text-edu-primary block mb-1">Activities:</span> 
+                          <span className="text-edu-dark text-lg">{formData.preferences}</span>
+                        </div>
+                        
+                        {formData.studentProfile && (
+                          <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                            <span className="font-bold text-edu-primary block mb-1">Student Profile:</span> 
+                            <span className="text-edu-dark text-lg">{formData.studentProfile}</span>
+                          </div>
+                        )}
+                        
+                        {formData.additionalInfo && (
+                          <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                            <span className="font-bold text-edu-primary block mb-1">Additional Info:</span> 
+                            <span className="text-edu-dark text-lg">{formData.additionalInfo}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="space-y-3">
-                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-                        <span className="font-bold text-edu-primary block mb-1">Activities:</span> 
-                        <span className="text-edu-dark text-lg">{formData.preferences}</span>
+                    <div className="mt-6 pt-3 border-t border-gray-200 bg-edu-light bg-opacity-30 p-4 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
+                          <Clock size={20} className="text-edu-primary" />
+                        </div>
+                        <span className="text-edu-primary font-medium">
+                          Generated in {worksheetData.generationTime} seconds
+                        </span>
                       </div>
-                      
-                      {formData.studentProfile && (
-                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-                          <span className="font-bold text-edu-primary block mb-1">Student Profile:</span> 
-                          <span className="text-edu-dark text-lg">{formData.studentProfile}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
+                          <FileText size={20} className="text-edu-primary" />
                         </div>
-                      )}
-                      
-                      {formData.additionalInfo && (
-                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-                          <span className="font-bold text-edu-primary block mb-1">Additional Info:</span> 
-                          <span className="text-edu-dark text-lg">{formData.additionalInfo}</span>
-                        </div>
-                      )}
+                        <span className="text-edu-primary font-medium">
+                          Based on {worksheetData.sourceCount} sources
+                        </span>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-3 border-t border-gray-200 bg-edu-light bg-opacity-30 p-4 rounded-lg flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
-                        <Clock size={20} className="text-edu-primary" />
-                      </div>
-                      <span className="text-edu-primary font-medium">
-                        Generated in {worksheetData.generationTime} seconds
-                      </span>
+                  <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 z-10 bg-gray-50 py-3">
+                    <div className="inline-flex rounded-md shadow-sm" role="group">
+                      <button
+                        onClick={() => setWorksheetView(WorksheetView.STUDENT)}
+                        className={`px-4 py-2 text-sm font-medium border border-r-0 rounded-l-lg focus:z-10 focus:outline-none ${
+                          worksheetView === WorksheetView.STUDENT 
+                            ? 'bg-edu-primary text-white border-edu-primary' 
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-edu-light'
+                        }`}
+                      >
+                        Student View
+                      </button>
+                      <button
+                        onClick={() => setWorksheetView(WorksheetView.TEACHER)}
+                        className={`px-4 py-2 text-sm font-medium border rounded-r-lg focus:z-10 focus:outline-none ${
+                          worksheetView === WorksheetView.TEACHER 
+                            ? 'bg-edu-primary text-white border-edu-primary' 
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-edu-light'
+                        }`}
+                      >
+                        Teacher View
+                      </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
-                        <FileText size={20} className="text-edu-primary" />
-                      </div>
-                      <span className="text-edu-primary font-medium">
-                        Based on {worksheetData.sourceCount} sources
-                      </span>
+                    
+                    <div className="flex items-center bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-yellow-700 text-sm animate-pulse">
+                      <Info size={16} className="mr-2" />
+                      <span>You can edit worksheet content by clicking the Edit button</span>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="inline-flex rounded-md shadow-sm" role="group">
-                    <button
-                      onClick={() => setWorksheetView(WorksheetView.STUDENT)}
-                      className={`px-4 py-2 text-sm font-medium border border-r-0 rounded-l-lg focus:z-10 focus:outline-none ${
-                        worksheetView === WorksheetView.STUDENT 
-                          ? 'bg-edu-primary text-white border-edu-primary' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-edu-light'
-                      }`}
-                    >
-                      Student View
-                    </button>
-                    <button
-                      onClick={() => setWorksheetView(WorksheetView.TEACHER)}
-                      className={`px-4 py-2 text-sm font-medium border rounded-r-lg focus:z-10 focus:outline-none ${
-                        worksheetView === WorksheetView.TEACHER 
-                          ? 'bg-edu-primary text-white border-edu-primary' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-edu-light'
-                      }`}
-                    >
-                      Teacher View
-                    </button>
                   </div>
                   
-                  <div className="flex items-center bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-yellow-700 text-sm animate-pulse">
-                    <Info size={16} className="mr-2" />
-                    <span>You can edit worksheet content by clicking the Edit button</span>
+                  <div ref={ref => saveContentRefs(ref)}>
+                    <WorksheetPreview 
+                      data={worksheetData} 
+                      viewMode={worksheetView}
+                      onDownload={() => paymentComplete ? downloadWorksheet() : setPaymentDialogOpen(true)}
+                    />
                   </div>
                 </div>
-                
-                <div ref={contentRef}>
-                  <WorksheetPreview 
-                    data={worksheetData} 
-                    viewMode={worksheetView}
-                    onDownload={() => setPaymentDialogOpen(true)}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {generationStatus !== GenerationStatus.GENERATING && generationStatus !== GenerationStatus.COMPLETED && (
-              <div className="bg-white p-8 rounded-lg shadow-md h-full flex flex-col items-center justify-center text-center">
-                <div className="bg-edu-light p-6 rounded-full mb-6">
-                  <FileText size={48} className="text-edu-primary" />
-                </div>
-                <h2 className="text-2xl font-bold mb-4 text-edu-dark">
-                  Your worksheet will appear here
-                </h2>
-                <p className="text-gray-600 max-w-md">
-                  Fill out the form and click "Generate worksheet" to create
-                  a personalized teaching material for your English lesson.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
 
+      {/* Payment Dialog */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -371,6 +497,20 @@ const Index = () => {
               {promoCode.toLowerCase() === 'edooqoo' ? 'Download with Promo' : 'Continue to Payment'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generation Modal */}
+      <Dialog open={showGenerationModal} onOpenChange={setShowGenerationModal}>
+        <DialogContent className="sm:max-w-md" showClose={false}>
+          <div className="py-4">
+            <GenerationProgress 
+              status={generationStatus}
+              duration={60} // Longer animation duration
+              steps={generationSteps}
+              currentTime={generationTime}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
