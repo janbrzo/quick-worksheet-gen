@@ -26,5 +26,18 @@ export enum GenerationStatus {
 export interface WorksheetData {
   title: string;
   content: string;
-  teacherNotes?: string;
+  teacherNotes: string;
+  exercises: Exercise[];
+}
+
+export interface Exercise {
+  title: string;
+  instructions: string;
+  content: string;
+  type: 'vocabulary' | 'reading' | 'writing' | 'speaking' | 'listening' | 'grammar';
+}
+
+export interface FeedbackData {
+  rating: number;
+  comment: string;
 }

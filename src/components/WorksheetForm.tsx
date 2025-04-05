@@ -24,35 +24,35 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
   const isCompleted = generationStatus === GenerationStatus.COMPLETED;
 
   const topicTiles = [
-    "IT: debugowanie kodu",
-    "Biznes: negocjacje handlowe",
-    "Medycyna: opisywanie objawów",
-    "Turystyka: rezerwacja hoteli",
-    "Finanse: analiza budżetu"
+    "IT: debugging code",
+    "Business: trade negotiations",
+    "Medicine: describing symptoms",
+    "Tourism: hotel reservations",
+    "Finance: budget analysis"
   ];
 
   const objectiveTiles = [
-    "Przygotowanie do prezentacji w pracy na temat AI",
-    "Ćwiczenie słownictwa do rozmowy kwalifikacyjnej",
-    "Nauka opisywania procesów biznesowych",
-    "Rozwój płynności w dyskusjach o technologii",
-    "Zrozumienie gramatyki: zdania warunkowe"
+    "Preparing for a work presentation about AI",
+    "Practicing vocabulary for a job interview",
+    "Learning to describe business processes",
+    "Developing fluency in technology discussions",
+    "Understanding grammar: conditional sentences"
   ];
 
   const preferencesTiles = [
-    "Ćwiczenia pisemne",
-    "Dialogi i role-play",
-    "Quizy interaktywne",
-    "Dyskusje grupowe",
-    "Analiza tekstów branżowych"
+    "Writing exercises",
+    "Dialogues and role-play",
+    "Interactive quizzes",
+    "Group discussions",
+    "Industry text analysis"
   ];
 
   const profileTiles = [
-    "Cel: awans w pracy IT, preferuje pisanie, interesuje się programowaniem, umie Present Simple, nie umie Future Tenses",
-    "Cel: zdanie egzaminu IELTS, preferuje quizy, interesuje się podróżami, umie słownictwo ogólne, nie umie idioms",
-    "Cel: rozmowy biznesowe, preferuje dialogi, interesuje się finansami, umie Past Simple, nie umie phrasal verbs",
-    "Cel: prezentacja w pracy, preferuje dyskusje, interesuje się marketingiem, umie słownictwo branżowe, nie umie conditionals",
-    "Cel: płynność w rozmowach, preferuje role-play, interesuje się sportem, umie Present Perfect, nie umie Passive Voice"
+    "Goal: promotion in IT job, prefers writing, interested in programming, knows Present Simple, struggles with Future Tenses",
+    "Goal: passing IELTS exam, prefers quizzes, interested in travel, knows general vocabulary, struggles with idioms",
+    "Goal: business conversations, prefers dialogues, interested in finance, knows Past Simple, struggles with phrasal verbs",
+    "Goal: work presentation, prefers discussions, interested in marketing, knows industry vocabulary, struggles with conditionals",
+    "Goal: conversational fluency, prefers role-play, interested in sports, knows Present Perfect, struggles with Passive Voice"
   ];
 
   return (
@@ -60,7 +60,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
       <h2 className="text-2xl font-bold mb-6 text-edu-dark">Worksheet Generator</h2>
       
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Czas lekcji</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Lesson Duration</label>
         <div className="flex gap-2">
           {['30', '45', '60'].map((duration) => (
             <button
@@ -73,39 +73,39 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
                   : 'bg-white border-gray-300 text-gray-700 hover:bg-edu-light hover:border-edu-accent'
               }`}
             >
-              {duration} minut
+              {duration} minutes
             </button>
           ))}
         </div>
       </div>
 
       <TileSelector
-        label="Temat lekcji*"
-        placeholder="Np. IT: debugowanie kodu, Biznes: negocjacje"
+        label="Lesson Topic*"
+        placeholder="E.g., IT: debugging code, Business: negotiations"
         tiles={topicTiles}
         value={formData.lessonTopic}
         onChange={(value) => updateField('lessonTopic', value)}
       />
 
       <TileSelector
-        label="Cel lekcji*"
-        placeholder="Np. Przygotowanie do prezentacji, Ćwiczenie słownictwa"
+        label="Lesson Objective*"
+        placeholder="E.g., Preparing for a presentation, Practicing vocabulary"
         tiles={objectiveTiles}
         value={formData.lessonObjective}
         onChange={(value) => updateField('lessonObjective', value)}
       />
 
       <TileSelector
-        label="Preferencje*"
-        placeholder="Np. Ćwiczenia pisemne, Dialogi"
+        label="Preferences*"
+        placeholder="E.g., Writing exercises, Dialogues"
         tiles={preferencesTiles}
         value={formData.preferences}
         onChange={(value) => updateField('preferences', value)}
       />
 
       <TileSelector
-        label="Profil ucznia (nieobowiązkowe)"
-        placeholder="Np. Cel: awans w pracy IT, preferuje pisanie..."
+        label="Student Profile (optional)"
+        placeholder="E.g., Goal: promotion in IT job, prefers writing..."
         tiles={profileTiles}
         value={formData.studentProfile || ''}
         onChange={(value) => updateField('studentProfile', value)}
@@ -113,12 +113,12 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
 
       <div className="space-y-2 mb-6">
         <label className="block text-sm font-medium text-gray-700">
-          Dodatkowe informacje (nieobowiązkowe)
+          Additional Information (optional)
         </label>
         <textarea
           value={formData.additionalInfo || ''}
           onChange={(e) => updateField('additionalInfo', e.target.value)}
-          placeholder="Np. Uczeń ma trudności z wymową 'r', Proszę uwzględnić więcej przykładów z IT"
+          placeholder="E.g., Student has difficulty pronouncing 'r', Please include more IT examples"
           className="w-full p-3 border border-gray-300 rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-edu-accent"
         />
       </div>
@@ -131,7 +131,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
             className="flex items-center gap-2"
           >
             <RefreshCw size={16} />
-            Nowy worksheet
+            New Worksheet
           </Button>
         )}
         <Button
@@ -139,7 +139,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           disabled={isGenerating || !formData.lessonTopic || !formData.lessonObjective || !formData.preferences}
           className="bg-edu-primary hover:bg-edu-dark text-white flex items-center gap-2"
         >
-          {isGenerating ? 'Generowanie...' : isCompleted ? 'Wygeneruj ponownie' : 'Generuj worksheet'}
+          {isGenerating ? 'Generating...' : isCompleted ? 'Generate Again' : 'Generate Worksheet'}
           {!isGenerating && <ArrowRight size={16} />}
         </Button>
       </div>
