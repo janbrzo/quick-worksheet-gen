@@ -1,123 +1,99 @@
 
 import React, { useState, useEffect } from 'react';
-import { Progress } from '@/components/ui/progress';
 import { GenerationStatus, GenerationStep } from '@/types/worksheet';
-import { Lightbulb, Loader2 } from 'lucide-react';
+import { Loader2, Check, X, FileText } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface GenerationProgressProps {
   status: GenerationStatus;
   duration: number;
-  steps?: GenerationStep[];
+  steps: GenerationStep[];
+  currentTime?: number;
 }
 
 const GenerationProgress: React.FC<GenerationProgressProps> = ({ 
   status, 
   duration,
-  steps = []
+  steps,
+  currentTime = 0
 }) => {
   const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  // Calculate completed steps
+  const completedSteps = steps.filter(step => step.completed).length;
+  const totalSteps = steps.length || 1;
+  const stepsProgress = Math.round((completedSteps / totalSteps) * 100);
   
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    
+    // Handle progress animation
     if (status === GenerationStatus.GENERATING) {
-      // Reset progress when generation starts
-      setProgress(0);
-      setCurrentStep(0);
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          const calculatedProgress = Math.min(prev + 100 / (duration * 10), 99);
+          return calculatedProgress;
+        });
+      }, 100);
       
-      // Update progress based on steps completion
-      if (steps.length > 0) {
-        const completedSteps = steps.filter(step => step.completed).length;
-        const percentage = (completedSteps / steps.length) * 100;
-        setProgress(percentage);
-        
-        // Update current step if there's at least one completed step
-        if (completedSteps > 0) {
-          setCurrentStep(completedSteps - 1);
-        }
-      } else {
-        // Fallback progress calculation when no steps provided
-        const interval = 100 / (duration - 1);
-        let counter = 0;
-        
-        timer = setInterval(() => {
-          counter++;
-          
-          // Simulate steps taking longer toward the end for realism
-          let increment = interval;
-          if (counter > duration * 0.7) {
-            increment = interval * 0.7;
-          }
-          
-          setProgress(prev => {
-            // Ensure we don't go over 95% as we wait for completion status
-            const newProgress = prev + increment;
-            return newProgress > 95 ? 95 : newProgress;
-          });
-          
-          if (counter >= duration) {
-            clearInterval(timer);
-          }
-        }, 1000);
-      }
+      // Timer for elapsed seconds
+      const timer = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+      
+      return () => {
+        clearInterval(interval);
+        clearInterval(timer);
+      };
     } else if (status === GenerationStatus.COMPLETED) {
       setProgress(100);
+    } else {
+      setProgress(0);
+      setElapsedTime(0);
     }
-    
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [status, duration, steps]);
+  }, [status, duration]);
   
+  // If not generating or completed, don't show anything
   if (status !== GenerationStatus.GENERATING && status !== GenerationStatus.COMPLETED) {
     return null;
   }
   
-  const renderCurrentStep = () => {
-    if (steps.length === 0 || currentStep >= steps.length) {
-      return null;
-    }
-    
-    return (
-      <div className="animate-fade-in">
-        <p className="text-edu-dark font-medium mb-1">
-          {steps[currentStep].text}
-        </p>
-      </div>
-    );
-  };
-  
   return (
-    <div className="mb-8 p-5 bg-edu-light rounded-lg">
-      <div className="flex items-center gap-3 mb-2">
+    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+      <div className="flex items-center mb-4">
         {status === GenerationStatus.GENERATING ? (
-          <Loader2 className="h-5 w-5 text-edu-primary animate-spin" />
+          <Loader2 className="mr-2 h-5 w-5 animate-spin text-edu-primary" />
         ) : (
-          <Lightbulb className="h-5 w-5 text-edu-primary" />
+          <Check className="mr-2 h-5 w-5 text-green-500" />
         )}
-        <h3 className="text-lg font-semibold text-edu-dark">
+        
+        <h2 className="text-xl font-bold">
           {status === GenerationStatus.GENERATING 
-            ? "Generating your worksheet..." 
-            : "Worksheet generation complete!"}
-        </h3>
+            ? `Generating Worksheet... (${elapsedTime}s)` 
+            : `Generation Complete (${currentTime || elapsedTime}s)`
+          }
+        </h2>
       </div>
       
-      <div className="mb-4">
-        {renderCurrentStep()}
-      </div>
+      <Progress 
+        value={status === GenerationStatus.GENERATING ? progress : 100} 
+        className="h-2 mb-4"
+      />
       
-      <div className="mb-2">
-        <Progress value={progress} className="h-2" />
-      </div>
-      
-      <div className="text-sm text-gray-500 flex justify-between">
-        <span>
-          {status === GenerationStatus.GENERATING 
-            ? `Processing...` 
-            : "Completed!"}
-        </span>
-        <span>{Math.round(progress)}% complete</span>
+      <div className="space-y-2 mt-4">
+        {steps.map((step, index) => (
+          <div key={index} className="flex items-center">
+            {step.completed ? (
+              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mr-3">
+                <Check className="h-3 w-3 text-white" />
+              </div>
+            ) : (
+              <div className="w-5 h-5 rounded-full border border-gray-300 mr-3"></div>
+            )}
+            <span className={step.completed ? 'text-gray-800' : 'text-gray-400'}>
+              {step.text}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

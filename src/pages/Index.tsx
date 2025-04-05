@@ -5,7 +5,7 @@ import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { FileText } from 'lucide-react';
+import { FileText, Clock, FileCheck, Edit, Award } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -18,7 +18,8 @@ const Index = () => {
     generationSteps,
     updateField,
     resetForm,
-    generateWorksheet
+    generateWorksheet,
+    generationTime
   } = useFormData();
   
   // State to control which page is visible
@@ -70,6 +71,21 @@ const Index = () => {
     }, 1000);
   };
 
+  // Disable printing
+  React.useEffect(() => {
+    const disablePrint = (e) => {
+      e.preventDefault();
+      toast.error("Printing is disabled. Please download the PDF instead.");
+      return false;
+    };
+    
+    window.addEventListener('beforeprint', disablePrint);
+    
+    return () => {
+      window.removeEventListener('beforeprint', disablePrint);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-edu-dark text-white py-4">
@@ -83,7 +99,68 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         {currentPage === 1 && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-5xl mx-auto">
+            {/* Feature Tiles Section */}
+            <div className="mb-10">
+              <h2 className="text-2xl font-bold text-center mb-8 text-edu-dark">
+                Create professional, tailored worksheets for your English lessons in minutes instead of hours
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Feature 1 */}
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
+                      <Clock size={24} />
+                    </div>
+                    <h3 className="font-bold text-lg">Save Time</h3>
+                  </div>
+                  <p className="text-gray-600">
+                    Create in 5 minutes what would normally take 1-2 hours
+                  </p>
+                </div>
+                
+                {/* Feature 2 */}
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
+                      <Award size={24} />
+                    </div>
+                    <h3 className="font-bold text-lg">Tailored Content</h3>
+                  </div>
+                  <p className="text-gray-600">
+                    Specific, industry-focused exercises for your students
+                  </p>
+                </div>
+                
+                {/* Feature 3 */}
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
+                      <FileCheck size={24} />
+                    </div>
+                    <h3 className="font-bold text-lg">Ready to Use</h3>
+                  </div>
+                  <p className="text-gray-600">
+                    Professional formats requiring minimal edits ({"<"} 10%)
+                  </p>
+                </div>
+                
+                {/* Feature 4 */}
+                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
+                      <Edit size={24} />
+                    </div>
+                    <h3 className="font-bold text-lg">Customizable</h3>
+                  </div>
+                  <p className="text-gray-600">
+                    Edit worksheet content as needed for your classes
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <WorksheetForm
               formData={formData}
               updateField={updateField}
@@ -114,19 +191,53 @@ const Index = () => {
               status={generationStatus} 
               duration={15}
               steps={generationSteps}
+              currentTime={generationTime}
             />
             
             {worksheetData && generationStatus === GenerationStatus.COMPLETED && (
               <div>
-                <div className="mb-4 p-4 bg-gray-100 rounded-lg">
-                  <h2 className="text-xl font-bold mb-2">Lesson Brief</h2>
-                  <ul className="space-y-2">
-                    <li><strong>Duration:</strong> {formData.lessonDuration} minutes</li>
-                    <li><strong>Topic:</strong> {formData.lessonTopic}</li>
-                    <li><strong>Objective:</strong> {formData.lessonObjective}</li>
-                    <li><strong>Activities:</strong> {formData.preferences}</li>
-                    {formData.studentProfile && <li><strong>Student Profile:</strong> {formData.studentProfile}</li>}
-                  </ul>
+                <div className="mb-4 bg-white p-5 rounded-lg shadow border-l-4 border-edu-primary">
+                  <h2 className="text-xl font-bold mb-4 text-edu-dark">Lesson Brief</h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
+                        <span className="font-bold text-edu-primary">Duration:</span> 
+                        <span className="ml-2">{formData.lessonDuration} minutes</span>
+                      </div>
+                      
+                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
+                        <span className="font-bold text-edu-primary">Topic:</span> 
+                        <span className="ml-2">{formData.lessonTopic}</span>
+                      </div>
+                      
+                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
+                        <span className="font-bold text-edu-primary">Objective:</span> 
+                        <span className="ml-2">{formData.lessonObjective}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
+                        <span className="font-bold text-edu-primary">Activities:</span> 
+                        <span className="ml-2">{formData.preferences}</span>
+                      </div>
+                      
+                      {formData.studentProfile && (
+                        <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
+                          <span className="font-bold text-edu-primary">Student Profile:</span> 
+                          <span className="ml-2">{formData.studentProfile}</span>
+                        </div>
+                      )}
+                      
+                      {formData.additionalInfo && (
+                        <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
+                          <span className="font-bold text-edu-primary">Additional Info:</span> 
+                          <span className="ml-2">{formData.additionalInfo}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   
                   <div className="mt-4 pt-3 border-t border-gray-200 text-sm">
                     <p className="text-edu-primary font-medium">

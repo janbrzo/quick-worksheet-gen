@@ -17,6 +17,7 @@ export const useFormData = () => {
   const [worksheetData, setWorksheetData] = useState<WorksheetData | null>(null);
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
   const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
+  const [generationTime, setGenerationTime] = useState(0);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -27,6 +28,7 @@ export const useFormData = () => {
     setWorksheetData(null);
     setGenerationStatus(GenerationStatus.IDLE);
     setGenerationSteps([]);
+    setGenerationTime(0);
   };
 
   const generateWorksheet = async () => {
@@ -55,7 +57,10 @@ export const useFormData = () => {
     setGenerationSteps(steps);
     
     try {
-      // Simulate API call with steps
+      // Start timer
+      const startTime = Date.now();
+      
+      // Simulate API call with sequential steps
       for (let i = 0; i < steps.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 600));
         
@@ -67,8 +72,9 @@ export const useFormData = () => {
       }
       
       // Calculate random generation metrics
-      const generationTime = Math.floor(Math.random() * (46 - 31 + 1)) + 31; // 31-46 seconds
+      const generationTimeValue = Math.floor(Math.random() * (46 - 31 + 1)) + 31; // 31-46 seconds
       const sourceCount = Math.floor(Math.random() * (100 - 51 + 1)) + 51; // 51-100 sources
+      setGenerationTime(generationTimeValue);
       
       // Generate exercises based on lesson duration
       const exerciseCount = formData.lessonDuration === '30' ? 4 : 
@@ -81,7 +87,7 @@ export const useFormData = () => {
         teacherNotes: generateTeacherTips(formData),
         exercises: generateExercises(formData, exerciseCount),
         vocabulary: generateVocabulary(formData, 15),
-        generationTime,
+        generationTime: generationTimeValue,
         sourceCount
       };
       
@@ -456,6 +462,7 @@ ${data.additionalInfo ? `\nSpecial considerations: ${data.additionalInfo}` : ''}
     worksheetData,
     generationStatus,
     generationSteps,
+    generationTime,
     updateField,
     resetForm,
     generateWorksheet

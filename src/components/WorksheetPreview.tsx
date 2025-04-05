@@ -2,12 +2,10 @@
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Star, Edit, Check, Printer, Book, FileCheck, CheckSquare, List } from 'lucide-react';
+import { Download, FileText, Star, Edit, Check, Book, FileCheck, CheckSquare, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface WorksheetPreviewProps {
@@ -21,10 +19,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
   const [isEditing, setIsEditing] = useState(false);
   const [editableContent, setEditableContent] = useState(data.content);
   const [editableExercises, setEditableExercises] = useState<Exercise[]>(data.exercises);
-  const [editableTeacherNotes, setEditableTeacherNotes] = useState(data.teacherNotes);
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({ rating: 0, comment: '' });
-  const [temporaryRating, setTemporaryRating] = useState(0);
   
   const renderMarkdown = (text: string) => {
     return text.split('\n').map((line, index) => {
@@ -70,15 +66,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
     setEditableExercises(updatedExercises);
   };
 
-  const handlePrintWorksheet = () => {
-    toast.success('Preparing worksheet for printing');
-    setTimeout(() => {
-      window.print();
-    }, 500);
-  };
-
   const handleRateWorksheet = (rating: number) => {
-    setTemporaryRating(rating);
     setFeedbackData({ ...feedbackData, rating });
     setFeedbackDialogOpen(true);
   };
@@ -110,17 +98,18 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
           {renderExerciseLayout(exercise)}
         </div>
         
-        {showAnswers && (
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-2 text-edu-secondary font-medium mt-3 mb-2">
+        {viewMode === WorksheetView.TEACHER && (
+          <div className="mt-4 bg-edu-light bg-opacity-40 p-3 rounded-lg border-l-4 border-edu-secondary">
+            <div className="flex items-center gap-2 text-edu-secondary font-medium mb-2">
               <FileCheck size={18} />
-              Teacher Answers
-              <span className="text-xs bg-edu-light px-2 py-0.5 rounded ml-2">Click to view</span>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="bg-edu-light p-3 rounded-md mt-1 text-sm border-l-4 border-edu-secondary animate-accordion-down">
-              {renderMarkdown(exercise.teacherAnswers || '')}
-            </CollapsibleContent>
-          </Collapsible>
+              Teacher Tips
+            </div>
+            <div className="text-sm">
+              {exercise.teacherAnswers ? renderMarkdown(exercise.teacherAnswers) : (
+                <p>Focus on communication over accuracy. Encourage students to use the vocabulary from this section.</p>
+              )}
+            </div>
+          </div>
         )}
       </div>
     );
@@ -290,14 +279,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
             {isEditing ? <><Check size={16} /> Save</> : <><Edit size={16} /> Edit</>}
           </Button>
           <Button 
-            variant="outline" 
-            onClick={handlePrintWorksheet}
-            className="flex items-center gap-2"
-          >
-            <Printer size={16} />
-            Print
-          </Button>
-          <Button 
             onClick={onDownload}
             className="bg-edu-primary hover:bg-edu-dark text-white flex items-center gap-2"
           >
@@ -307,108 +288,82 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
         </div>
       </div>
 
-      <Tabs defaultValue="worksheet" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="worksheet">Worksheet</TabsTrigger>
-          <TabsTrigger value="teacher">Teacher Notes</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="worksheet">
-          <div ref={contentRef} className="print-content">
-            <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
-              {!isEditing ? (
-                <div>
-                  <div className="mb-6">
-                    {renderMarkdown(editableContent)}
-                  </div>
-                  
-                  {editableExercises.map((exercise, index) => (
-                    renderExerciseContent(exercise, index)
-                  ))}
-                  
-                  {renderVocabularySection()}
-                </div>
-              ) : (
-                <div className="space-y-6">
+      <div ref={contentRef} className="print-content">
+        <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
+          {!isEditing ? (
+            <div>
+              <div className="mb-6">
+                {renderMarkdown(editableContent)}
+              </div>
+              
+              {editableExercises.map((exercise, index) => (
+                renderExerciseContent(exercise, index)
+              ))}
+              
+              {renderVocabularySection()}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
+                <Textarea 
+                  value={editableContent}
+                  onChange={(e) => setEditableContent(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md min-h-[150px]"
+                />
+              </div>
+              
+              <h3 className="font-bold text-lg">Exercises</h3>
+              
+              {editableExercises.map((exercise, index) => (
+                <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-lg">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
-                    <Textarea 
-                      value={editableContent}
-                      onChange={(e) => setEditableContent(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-md min-h-[150px]"
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={exercise.title}
+                      onChange={(e) => handleEditExercise(index, 'title', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md"
                     />
                   </div>
                   
-                  <h3 className="font-bold text-lg">Exercises</h3>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+                    <input
+                      type="text"
+                      value={exercise.instructions}
+                      onChange={(e) => handleEditExercise(index, 'instructions', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    />
+                  </div>
                   
-                  {editableExercises.map((exercise, index) => (
-                    <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input
-                          type="text"
-                          value={exercise.title}
-                          onChange={(e) => handleEditExercise(index, 'title', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
-                        <input
-                          type="text"
-                          value={exercise.instructions}
-                          onChange={(e) => handleEditExercise(index, 'instructions', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                        <Textarea
-                          value={exercise.content}
-                          onChange={(e) => handleEditExercise(index, 'content', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
-                        />
-                      </div>
-                      
-                      {viewMode === WorksheetView.TEACHER && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Teacher Answers (only visible in Teacher view)
-                          </label>
-                          <Textarea
-                            value={exercise.teacherAnswers || ''}
-                            onChange={(e) => handleEditExercise(index, 'teacherAnswers', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
-                          />
-                        </div>
-                      )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                    <Textarea
+                      value={exercise.content}
+                      onChange={(e) => handleEditExercise(index, 'content', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
+                    />
+                  </div>
+                  
+                  {viewMode === WorksheetView.TEACHER && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Teacher Notes (only visible in Teacher view)
+                      </label>
+                      <Textarea
+                        value={exercise.teacherAnswers || ''}
+                        onChange={(e) => handleEditExercise(index, 'teacherAnswers', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
+                      />
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              ))}
             </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="teacher">
-          <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
-            {!isEditing ? (
-              renderMarkdown(editableTeacherNotes)
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Teacher Notes</label>
-                <Textarea 
-                  value={editableTeacherNotes}
-                  onChange={(e) => setEditableTeacherNotes(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md min-h-[300px]"
-                />
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+          )}
+        </div>
+      </div>
 
       <div className="border-t border-gray-200 pt-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
