@@ -5,7 +5,7 @@ import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { FileText, Clock, FileCheck, Edit, Award } from 'lucide-react';
+import { FileText, Clock, FileCheck, Edit, Award, Download, Info, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -45,31 +45,61 @@ const Index = () => {
       downloadWorksheet();
       setPaymentDialogOpen(false);
     } else {
-      // In a real app, this would redirect to a payment gateway
-      toast.success('Payment processed! Downloading worksheet...');
-      downloadWorksheet();
+      // Redirect to Stripe payment link
+      window.open('https://buy.stripe.com/dR69BW5Oq4MC52w9AA', '_blank');
+      toast.info('Redirecting to payment page. After payment, return to download your worksheet.');
       setPaymentDialogOpen(false);
     }
   };
   
   // Function to simulate PDF download
   const downloadWorksheet = () => {
-    // This is a mock implementation
-    toast.success('Your worksheet is being prepared for download');
-    
-    // In a real implementation, this would create and download a PDF
-    setTimeout(() => {
-      const element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent('Worksheet content would be here'));
-      element.setAttribute('download', `worksheet-${formData.lessonTopic.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+    try {
+      // This will actually generate and download a real PDF
+      if (!contentRef.current) {
+        toast.error("Could not find content to download");
+        return;
+      }
       
-      toast.success('Worksheet downloaded successfully!');
-    }, 1000);
+      // Display processing message
+      toast.success('Your worksheet is being prepared for download');
+      
+      // Create a proper filename
+      const filename = `worksheet-${formData.lessonTopic.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`;
+      
+      // Use html2canvas and jsPDF to generate the PDF
+      import('html2canvas').then(html2canvasModule => {
+        const html2canvas = html2canvasModule.default;
+        html2canvas(contentRef.current, {
+          scale: 2, // Higher scale for better quality
+          useCORS: true,
+          logging: false
+        }).then(canvas => {
+          import('jspdf').then(jsPDFModule => {
+            const { jsPDF } = jsPDFModule.default;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = 210; // A4 width in mm
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            pdf.save(filename);
+            
+            toast.success('Worksheet downloaded successfully!');
+          });
+        });
+      }).catch(err => {
+        console.error("PDF generation error:", err);
+        toast.error("Error generating PDF. Please try again.");
+      });
+    } catch (err) {
+      console.error("Download error:", err);
+      toast.error("Error downloading worksheet. Please try again.");
+    }
   };
+
+  // For PDF generation
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   // Disable printing
   React.useEffect(() => {
@@ -81,8 +111,20 @@ const Index = () => {
     
     window.addEventListener('beforeprint', disablePrint);
     
+    // Also add CSS to prevent print
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        body {
+          display: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    
     return () => {
       window.removeEventListener('beforeprint', disablePrint);
+      document.head.removeChild(style);
     };
   }, []);
 
@@ -90,77 +132,40 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-edu-dark text-white py-4">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold">Quick Worksheet Generator</h1>
-          <p className="text-edu-light mt-1">
-            Create professional English teaching worksheets in less than 5 minutes
-          </p>
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Quick Worksheet Generator</h1>
+              <p className="text-edu-light mt-1">
+                Create professional English teaching worksheets in less than 5 minutes
+              </p>
+            </div>
+            
+            {/* Feature tiles in header - smaller version */}
+            <div className="flex flex-wrap gap-2 mt-3 md:mt-0">
+              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
+                <Clock size={14} />
+                <span>Save Time</span>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
+                <Award size={14} />
+                <span>Tailored Content</span>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
+                <FileCheck size={14} />
+                <span>Ready to Use</span>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
+                <Edit size={14} />
+                <span>Customizable</span>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         {currentPage === 1 && (
           <div className="max-w-5xl mx-auto">
-            {/* Feature Tiles Section */}
-            <div className="mb-10">
-              <h2 className="text-2xl font-bold text-center mb-8 text-edu-dark">
-                Create professional, tailored worksheets for your English lessons in minutes instead of hours
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Feature 1 */}
-                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
-                      <Clock size={24} />
-                    </div>
-                    <h3 className="font-bold text-lg">Save Time</h3>
-                  </div>
-                  <p className="text-gray-600">
-                    Create in 5 minutes what would normally take 1-2 hours
-                  </p>
-                </div>
-                
-                {/* Feature 2 */}
-                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
-                      <Award size={24} />
-                    </div>
-                    <h3 className="font-bold text-lg">Tailored Content</h3>
-                  </div>
-                  <p className="text-gray-600">
-                    Specific, industry-focused exercises for your students
-                  </p>
-                </div>
-                
-                {/* Feature 3 */}
-                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
-                      <FileCheck size={24} />
-                    </div>
-                    <h3 className="font-bold text-lg">Ready to Use</h3>
-                  </div>
-                  <p className="text-gray-600">
-                    Professional formats requiring minimal edits ({"<"} 10%)
-                  </p>
-                </div>
-                
-                {/* Feature 4 */}
-                <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-edu-primary hover:shadow-lg transition-shadow">
-                  <div className="flex items-center mb-4">
-                    <div className="p-3 rounded-full bg-edu-light text-edu-primary mr-4">
-                      <Edit size={24} />
-                    </div>
-                    <h3 className="font-bold text-lg">Customizable</h3>
-                  </div>
-                  <p className="text-gray-600">
-                    Edit worksheet content as needed for your classes
-                  </p>
-                </div>
-              </div>
-            </div>
-            
             <WorksheetForm
               formData={formData}
               updateField={updateField}
@@ -196,57 +201,70 @@ const Index = () => {
             
             {worksheetData && generationStatus === GenerationStatus.COMPLETED && (
               <div>
-                <div className="mb-4 bg-white p-5 rounded-lg shadow border-l-4 border-edu-primary">
+                <div className="mb-4 bg-white p-5 rounded-lg shadow-md border-l-4 border-edu-primary">
                   <h2 className="text-xl font-bold mb-4 text-edu-dark">Lesson Brief</h2>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
-                        <span className="font-bold text-edu-primary">Duration:</span> 
-                        <span className="ml-2">{formData.lessonDuration} minutes</span>
+                    <div className="space-y-3">
+                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                        <span className="font-bold text-edu-primary block mb-1">Duration:</span> 
+                        <span className="text-edu-dark text-lg">{formData.lessonDuration} minutes</span>
                       </div>
                       
-                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
-                        <span className="font-bold text-edu-primary">Topic:</span> 
-                        <span className="ml-2">{formData.lessonTopic}</span>
+                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                        <span className="font-bold text-edu-primary block mb-1">Topic:</span> 
+                        <span className="text-edu-dark text-lg">{formData.lessonTopic}</span>
                       </div>
                       
-                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
-                        <span className="font-bold text-edu-primary">Objective:</span> 
-                        <span className="ml-2">{formData.lessonObjective}</span>
+                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                        <span className="font-bold text-edu-primary block mb-1">Objective:</span> 
+                        <span className="text-edu-dark text-lg">{formData.lessonObjective}</span>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
-                        <span className="font-bold text-edu-primary">Activities:</span> 
-                        <span className="ml-2">{formData.preferences}</span>
+                    <div className="space-y-3">
+                      <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                        <span className="font-bold text-edu-primary block mb-1">Activities:</span> 
+                        <span className="text-edu-dark text-lg">{formData.preferences}</span>
                       </div>
                       
                       {formData.studentProfile && (
-                        <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
-                          <span className="font-bold text-edu-primary">Student Profile:</span> 
-                          <span className="ml-2">{formData.studentProfile}</span>
+                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                          <span className="font-bold text-edu-primary block mb-1">Student Profile:</span> 
+                          <span className="text-edu-dark text-lg">{formData.studentProfile}</span>
                         </div>
                       )}
                       
                       {formData.additionalInfo && (
-                        <div className="bg-edu-light bg-opacity-30 p-3 rounded-lg">
-                          <span className="font-bold text-edu-primary">Additional Info:</span> 
-                          <span className="ml-2">{formData.additionalInfo}</span>
+                        <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
+                          <span className="font-bold text-edu-primary block mb-1">Additional Info:</span> 
+                          <span className="text-edu-dark text-lg">{formData.additionalInfo}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-3 border-t border-gray-200 text-sm">
-                    <p className="text-edu-primary font-medium">
-                      Generated in {worksheetData.generationTime} seconds • Based on {worksheetData.sourceCount} sources
-                    </p>
+                  <div className="mt-6 pt-3 border-t border-gray-200 bg-edu-light bg-opacity-30 p-4 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
+                        <Clock size={20} className="text-edu-primary" />
+                      </div>
+                      <span className="text-edu-primary font-medium">
+                        Generated in {worksheetData.generationTime} seconds
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
+                        <FileText size={20} className="text-edu-primary" />
+                      </div>
+                      <span className="text-edu-primary font-medium">
+                        Based on {worksheetData.sourceCount} sources
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="mb-4 flex justify-end">
+                <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div className="inline-flex rounded-md shadow-sm" role="group">
                     <button
                       onClick={() => setWorksheetView(WorksheetView.STUDENT)}
@@ -269,13 +287,20 @@ const Index = () => {
                       Teacher View
                     </button>
                   </div>
+                  
+                  <div className="flex items-center bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-yellow-700 text-sm animate-pulse">
+                    <Info size={16} className="mr-2" />
+                    <span>You can edit worksheet content by clicking the Edit button</span>
+                  </div>
                 </div>
                 
-                <WorksheetPreview 
-                  data={worksheetData} 
-                  viewMode={worksheetView}
-                  onDownload={() => setPaymentDialogOpen(true)}
-                />
+                <div ref={contentRef}>
+                  <WorksheetPreview 
+                    data={worksheetData} 
+                    viewMode={worksheetView}
+                    onDownload={() => setPaymentDialogOpen(true)}
+                  />
+                </div>
               </div>
             )}
             
@@ -308,11 +333,10 @@ const Index = () => {
             <div className="mb-6 p-4 border border-gray-200 rounded-lg">
               <h3 className="font-medium mb-2">One-time payment</h3>
               <p className="text-sm text-gray-600 mb-3">Support our service with a small contribution:</p>
-              <div className="grid grid-cols-3 gap-2">
-                <Button variant="outline" className="w-full">$1.00</Button>
-                <Button variant="outline" className="w-full bg-edu-light border-edu-primary text-edu-primary">$2.00</Button>
-                <Button variant="outline" className="w-full">$5.00</Button>
-              </div>
+              <Button onClick={() => window.open('https://buy.stripe.com/dR69BW5Oq4MC52w9AA', '_blank')} 
+                className="w-full bg-edu-primary hover:bg-edu-dark text-white flex items-center justify-center gap-2">
+                Pay $1.00 and Download <ExternalLink size={16} />
+              </Button>
             </div>
             
             <div className="mb-4">
@@ -341,8 +365,9 @@ const Index = () => {
             <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleDownloadWithPayment}>
-              {promoCode.toLowerCase() === 'edooqoo' ? 'Download with Promo' : 'Pay & Download'}
+            <Button onClick={handleDownloadWithPayment} className="flex items-center gap-2">
+              <Download size={16} />
+              {promoCode.toLowerCase() === 'edooqoo' ? 'Download with Promo' : 'Continue to Payment'}
             </Button>
           </DialogFooter>
         </DialogContent>

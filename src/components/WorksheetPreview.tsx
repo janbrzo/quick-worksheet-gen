@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
-import { Download, FileText, Star, Edit, Check, Book, FileCheck, CheckSquare, List } from 'lucide-react';
+import { Download, FileText, Star, Edit, Check, Book, FileCheck, CheckSquare, List, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -98,16 +98,14 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
           {renderExerciseLayout(exercise)}
         </div>
         
-        {viewMode === WorksheetView.TEACHER && (
+        {viewMode === WorksheetView.TEACHER && exercise.teacherAnswers && (
           <div className="mt-4 bg-edu-light bg-opacity-40 p-3 rounded-lg border-l-4 border-edu-secondary">
             <div className="flex items-center gap-2 text-edu-secondary font-medium mb-2">
-              <FileCheck size={18} />
+              <Lightbulb size={18} />
               Teacher Tips
             </div>
             <div className="text-sm">
-              {exercise.teacherAnswers ? renderMarkdown(exercise.teacherAnswers) : (
-                <p>Focus on communication over accuracy. Encourage students to use the vocabulary from this section.</p>
-              )}
+              {renderMarkdown(exercise.teacherAnswers)}
             </div>
           </div>
         )}
@@ -272,97 +270,100 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({ data, viewMode, onD
         <h2 className="text-2xl font-bold text-edu-dark">{data.title}</h2>
         <div className="flex gap-2">
           <Button 
-            variant="outline" 
+            variant={isEditing ? "default" : "outline"}
             onClick={handleEditToggle}
-            className="flex items-center gap-2"
+            className={`flex items-center gap-2 ${isEditing ? 'bg-green-600 hover:bg-green-700' : 'border-edu-primary text-edu-primary hover:bg-edu-light'}`}
           >
-            {isEditing ? <><Check size={16} /> Save</> : <><Edit size={16} /> Edit</>}
+            {isEditing ? <><Check size={16} /> Save Changes</> : <><Edit size={16} /> Edit Worksheet</>}
           </Button>
           <Button 
             onClick={onDownload}
             className="bg-edu-primary hover:bg-edu-dark text-white flex items-center gap-2"
           >
             <Download size={16} />
-            PDF
+            Download PDF
           </Button>
         </div>
       </div>
 
-      <div ref={contentRef} className="print-content">
-        <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
-          {!isEditing ? (
-            <div>
-              <div className="mb-6">
-                {renderMarkdown(editableContent)}
-              </div>
-              
-              {editableExercises.map((exercise, index) => (
-                renderExerciseContent(exercise, index)
-              ))}
-              
-              {renderVocabularySection()}
+      <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
+        {!isEditing ? (
+          <div>
+            <div className="mb-6">
+              {renderMarkdown(editableContent)}
             </div>
-          ) : (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
-                <Textarea 
-                  value={editableContent}
-                  onChange={(e) => setEditableContent(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md min-h-[150px]"
-                />
-              </div>
-              
-              <h3 className="font-bold text-lg">Exercises</h3>
-              
-              {editableExercises.map((exercise, index) => (
-                <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-lg">
+            
+            {editableExercises.map((exercise, index) => (
+              renderExerciseContent(exercise, index)
+            ))}
+            
+            {renderVocabularySection()}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="bg-yellow-50 p-3 border-l-4 border-yellow-400 text-yellow-800 mb-4">
+              <p className="font-medium">Editing Mode</p>
+              <p className="text-sm">Make your changes and click "Save Changes" when done.</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
+              <Textarea 
+                value={editableContent}
+                onChange={(e) => setEditableContent(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md min-h-[150px]"
+              />
+            </div>
+            
+            <h3 className="font-bold text-lg">Exercises</h3>
+            
+            {editableExercises.map((exercise, index) => (
+              <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-lg">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={exercise.title}
+                    onChange={(e) => handleEditExercise(index, 'title', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+                  <input
+                    type="text"
+                    value={exercise.instructions}
+                    onChange={(e) => handleEditExercise(index, 'instructions', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                  <Textarea
+                    value={exercise.content}
+                    onChange={(e) => handleEditExercise(index, 'content', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
+                  />
+                </div>
+                
+                {viewMode === WorksheetView.TEACHER && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input
-                      type="text"
-                      value={exercise.title}
-                      onChange={(e) => handleEditExercise(index, 'title', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
-                    <input
-                      type="text"
-                      value={exercise.instructions}
-                      onChange={(e) => handleEditExercise(index, 'instructions', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Teacher Tips (only visible in Teacher view)
+                    </label>
                     <Textarea
-                      value={exercise.content}
-                      onChange={(e) => handleEditExercise(index, 'content', e.target.value)}
+                      value={exercise.teacherAnswers || ''}
+                      onChange={(e) => handleEditExercise(index, 'teacherAnswers', e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
                     />
                   </div>
-                  
-                  {viewMode === WorksheetView.TEACHER && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Teacher Notes (only visible in Teacher view)
-                      </label>
-                      <Textarea
-                        value={exercise.teacherAnswers || ''}
-                        onChange={(e) => handleEditExercise(index, 'teacherAnswers', e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="border-t border-gray-200 pt-4">
