@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import WorksheetForm from '@/components/WorksheetForm';
 import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
@@ -76,7 +76,8 @@ const Index = () => {
           logging: false
         }).then(canvas => {
           import('jspdf').then(jsPDFModule => {
-            const { jsPDF } = jsPDFModule.default;
+            // Fix: Correct way to import jsPDF
+            const jsPDF = jsPDFModule.default;
             const pdf = new jsPDF('p', 'mm', 'a4');
             const imgData = canvas.toDataURL('image/png');
             const imgWidth = 210; // A4 width in mm
