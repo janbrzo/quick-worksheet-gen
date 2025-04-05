@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { FormData, WorksheetData, GenerationStatus, Exercise } from '../types/worksheet';
+import { FormData, WorksheetData, GenerationStatus, Exercise, VocabularyItem, GenerationStep } from '../types/worksheet';
 import { toast } from 'sonner';
 
 export const useFormData = () => {
@@ -16,6 +16,7 @@ export const useFormData = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [worksheetData, setWorksheetData] = useState<WorksheetData | null>(null);
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus>(GenerationStatus.IDLE);
+  const [generationSteps, setGenerationSteps] = useState<GenerationStep[]>([]);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -25,6 +26,7 @@ export const useFormData = () => {
     setFormData(initialFormData);
     setWorksheetData(null);
     setGenerationStatus(GenerationStatus.IDLE);
+    setGenerationSteps([]);
   };
 
   const generateWorksheet = async () => {
@@ -36,16 +38,51 @@ export const useFormData = () => {
 
     setGenerationStatus(GenerationStatus.GENERATING);
     
+    // Reset and initialize generation steps
+    const steps = [
+      { text: "Analyzing input data...", completed: false },
+      { text: "Gathering teaching resources...", completed: false },
+      { text: "Applying pedagogical frameworks...", completed: false },
+      { text: "Creating tailored exercises...", completed: false },
+      { text: "Adapting to specified preferences...", completed: false },
+      { text: "Adding teacher notes and guidance...", completed: false },
+      { text: "Compiling vocabulary list...", completed: false },
+      { text: "Formatting final worksheet...", completed: false },
+      { text: "Performing quality checks...", completed: false },
+      { text: "Finalizing worksheet...", completed: false }
+    ];
+    
+    setGenerationSteps(steps);
+    
     try {
-      // Simulate API call with longer delay
-      await new Promise(resolve => setTimeout(resolve, 6000));
+      // Simulate API call with steps
+      for (let i = 0; i < steps.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        setGenerationSteps(prev => {
+          const updated = [...prev];
+          updated[i].completed = true;
+          return updated;
+        });
+      }
+      
+      // Calculate random generation metrics
+      const generationTime = Math.floor(Math.random() * (46 - 31 + 1)) + 31; // 31-46 seconds
+      const sourceCount = Math.floor(Math.random() * (100 - 51 + 1)) + 51; // 51-100 sources
+      
+      // Generate exercises based on lesson duration
+      const exerciseCount = formData.lessonDuration === '30' ? 4 : 
+                            formData.lessonDuration === '45' ? 6 : 8;
       
       // This is where you would call the actual API
       const mockWorksheet: WorksheetData = {
         title: `Worksheet: ${formData.lessonTopic}`,
         content: generateMockContent(formData),
         teacherNotes: generateTeacherTips(formData),
-        exercises: generateExercises(formData)
+        exercises: generateExercises(formData, exerciseCount),
+        vocabulary: generateVocabulary(formData, 15),
+        generationTime,
+        sourceCount
       };
       
       setWorksheetData(mockWorksheet);
@@ -84,23 +121,39 @@ export const useFormData = () => {
   };
 
   // Generate multiple structured exercises based on lesson duration
-  const generateExercises = (data: FormData): Exercise[] => {
-    const exerciseCount = data.lessonDuration === '30' ? 4 : 
-                          data.lessonDuration === '45' ? 6 : 8;
-    
+  const generateExercises = (data: FormData, count: number): Exercise[] => {
     const exerciseTypes: Exercise['type'][] = [
       'vocabulary', 'reading', 'writing', 'speaking', 'grammar', 'listening'
     ];
     
-    return Array.from({ length: exerciseCount }, (_, i) => {
+    return Array.from({ length: count }, (_, i) => {
       const type = exerciseTypes[i % exerciseTypes.length];
       return {
         title: `Exercise ${i+1}: ${capitalizeFirst(type)} - ${generateExerciseTitle(type, data)}`,
         instructions: generateInstructions(type, data),
         content: generateExerciseContent(type, data),
-        type: type
+        type: type,
+        teacherAnswers: generateTeacherAnswers(type, data)
       };
     });
+  };
+
+  const generateTeacherAnswers = (type: Exercise['type'], data: FormData): string => {
+    // Generate mock teacher answers based on exercise type
+    const topic = data.lessonTopic.split(':')[1] || data.lessonTopic;
+    
+    switch(type) {
+      case 'vocabulary':
+        return "**Vocabulary Answers:**\n1. implementation - The process of putting a decision or plan into effect\n2. protocol - A set of rules governing data exchange\n3. framework - An essential supporting structure\n...";
+      case 'grammar':
+        return "**Grammar Answers:**\n1. implements\n2. had been working\n3. will not have completed\n4. attended\n5. discussed\n...";
+      case 'listening':
+        return "**Listening Answers:**\n1. communication\n2. time management\n3. customer feedback\n4. team collaboration\n5. quality control\n...";
+      case 'reading':
+        return "**Reading Answers:**\n1. The author suggests that improved communication is essential\n2. Three main benefits mentioned are efficiency, quality, and client satisfaction\n...";
+      default:
+        return `**Suggested answers for ${type} exercise:**\nMultiple correct answers are possible. Look for appropriate use of key terms and concepts related to ${topic}.`;
+    }
   };
 
   const capitalizeFirst = (str: string): string => {
@@ -170,6 +223,76 @@ export const useFormData = () => {
       default:
         return generateGenericExercise(field, topic, 10);
     }
+  };
+
+  // Generate vocabulary items for the vocabulary section
+  const generateVocabulary = (data: FormData, count: number): VocabularyItem[] => {
+    const terms = [
+      "implementation", "protocol", "framework", "infrastructure", 
+      "optimization", "methodology", "integration", "functionality", 
+      "specification", "configuration", "deployment", "interface", 
+      "validation", "authentication", "scalability", "compliance",
+      "optimization", "procedure", "regulation", "certification",
+      "standard", "guideline", "requirement", "benchmark", "evaluation"
+    ];
+    
+    const definitions = [
+      "The process of putting a decision or plan into effect",
+      "A set of rules governing data exchange between devices",
+      "An essential supporting structure",
+      "The action of making the best use of resources",
+      "A system of methods used in an activity",
+      "The process of combining parts into a whole",
+      "The quality of being useful or practical",
+      "A detailed description of design criteria",
+      "The arrangement of functional units according to their nature",
+      "The action of installing equipment or software",
+      "A point where two systems meet and interact",
+      "The process of checking validity or accuracy",
+      "The process of verifying identity",
+      "The capability to be changed in size or scale",
+      "The state of adhering to regulations or guidelines",
+      "The process of making the best use of resources",
+      "An established way of doing something",
+      "A rule or directive made and maintained",
+      "The action of providing an official document",
+      "A level of quality or attainment",
+      "A general rule or principle",
+      "A necessary condition",
+      "A standard by which something can be measured",
+      "The process of assessing or estimating the nature, quality, or ability"
+    ];
+    
+    const examples = [
+      `The ${data.lessonTopic.split(':')[0]} team is responsible for the implementation of the new system.`,
+      `The protocol must be followed to ensure data security.`,
+      `This framework provides a foundation for all our ${data.lessonTopic.split(':')[0]} processes.`,
+      `The company invested in infrastructure to support future growth.`,
+      `Their optimization strategies reduced costs by 30%.`,
+      `The methodology they use has proven successful in similar cases.`,
+      `System integration is critical for this project's success.`,
+      `This new functionality will improve user experience.`,
+      `The specification document details all requirements.`,
+      `The system configuration needs to be adjusted for optimal performance.`,
+      `Deployment of the new software will take place next week.`,
+      `The user interface was redesigned for better usability.`,
+      `Data validation is essential to maintain accuracy.`,
+      `Two-factor authentication provides additional security.`,
+      `The scalability of the system allows for future expansion.`
+    ];
+    
+    const result: VocabularyItem[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      const termIndex = i % terms.length;
+      result.push({
+        term: terms[termIndex],
+        definition: definitions[termIndex],
+        example: examples[i % examples.length]
+      });
+    }
+    
+    return result;
   };
 
   // Helper functions to generate different types of exercise content
@@ -332,6 +455,7 @@ ${data.additionalInfo ? `\nSpecial considerations: ${data.additionalInfo}` : ''}
     formData,
     worksheetData,
     generationStatus,
+    generationSteps,
     updateField,
     resetForm,
     generateWorksheet

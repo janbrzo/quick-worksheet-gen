@@ -28,6 +28,9 @@ export interface WorksheetData {
   content: string;
   teacherNotes: string;
   exercises: Exercise[];
+  vocabulary: VocabularyItem[];
+  generationTime: number;
+  sourceCount: number;
 }
 
 export interface Exercise {
@@ -35,9 +38,26 @@ export interface Exercise {
   instructions: string;
   content: string;
   type: 'vocabulary' | 'reading' | 'writing' | 'speaking' | 'listening' | 'grammar';
+  teacherAnswers?: string;
+}
+
+export interface VocabularyItem {
+  term: string;
+  definition: string;
+  example?: string;
 }
 
 export interface FeedbackData {
   rating: number;
   comment: string;
+}
+
+export enum WorksheetView {
+  STUDENT = 'student',
+  TEACHER = 'teacher'
+}
+
+export interface GenerationStep {
+  text: string;
+  completed: boolean;
 }
