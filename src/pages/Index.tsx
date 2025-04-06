@@ -83,9 +83,9 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">Quick Worksheet Generator</h1>
+              <h1 className="text-3xl font-bold">Create Your Worksheet</h1>
               <p className="text-edu-light mt-1">
-                Create professional English teaching worksheets in less than 5 minutes
+                Quick, professional English teaching materials in minutes
               </p>
             </div>
             
@@ -94,22 +94,22 @@ const Index = () => {
               <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
                 <FileText className="h-4 w-4 mb-1" />
                 <span className="text-xs font-medium">Save Time</span>
-                <span className="text-xxs hidden lg:block">5-min creation</span>
+                <span className="text-xs hidden lg:block">5-min creation</span>
               </div>
               <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
                 <Zap className="h-4 w-4 mb-1" />
                 <span className="text-xs font-medium">Tailored</span>
-                <span className="text-xxs hidden lg:block">Industry-focused</span>
+                <span className="text-xs hidden lg:block">Industry-focused</span>
               </div>
               <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
                 <FileText className="h-4 w-4 mb-1" />
                 <span className="text-xs font-medium">Ready</span>
-                <span className="text-xxs hidden lg:block">Professional format</span>
+                <span className="text-xs hidden lg:block">Professional format</span>
               </div>
               <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
                 <FileText className="h-4 w-4 mb-1" />
                 <span className="text-xs font-medium">Customizable</span>
-                <span className="text-xxs hidden lg:block">Easy to edit</span>
+                <span className="text-xs hidden lg:block">Easy to edit</span>
               </div>
             </div>
           </div>
@@ -119,7 +119,7 @@ const Index = () => {
       <div className="container mx-auto px-4 pt-8 pb-16">
         <main className="max-w-screen-xl mx-auto">
           {currentPage === 1 && (
-            <div className="w-full flex justify-center">
+            <div className="w-full">
               <WorksheetForm
                 formData={formData}
                 updateField={updateField}

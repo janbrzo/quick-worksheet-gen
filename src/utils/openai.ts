@@ -32,32 +32,82 @@ const buildPrompt = (params: WorksheetParams): string => {
     additionalInfo = ""
   } = params;
   
-  // Construct the prompt with strict sanitization and validation
-  return `Create a professional worksheet for English teaching based on:
-
-LESSON TIME: ${sanitizeInput(lessonDuration)} minutes
+  // Determine the exercise count based on lesson duration
+  let exerciseCount = 6; // Default for 45 min
+  if (lessonDuration === '30') {
+    exerciseCount = 4;
+  } else if (lessonDuration === '60') {
+    exerciseCount = 8;
+  }
+  
+  // Define exercise types based on count
+  const exerciseTypes = [
+    "Reading Passage with Comprehension Questions", 
+    "Vocabulary Matching", 
+    "Fill in the Blanks", 
+    "Multiple Choice Questions", 
+    "Speaking Practice with a Dialogue", 
+    "Discussion Questions"
+  ];
+  
+  // Adjust exercise types based on duration
+  let selectedExerciseTypes = [...exerciseTypes];
+  
+  // For 60 min lessons, add two more exercise types
+  if (exerciseCount === 8) {
+    selectedExerciseTypes = [
+      ...selectedExerciseTypes,
+      "Error Correction",
+      "Role-play Scenario with Key Expressions"
+    ];
+  }
+  
+  // For 30 min lessons, reduce exercise types
+  if (exerciseCount === 4) {
+    selectedExerciseTypes = selectedExerciseTypes.slice(0, 4);
+  }
+  
+  // Create exercise list string
+  const exerciseList = selectedExerciseTypes.map(type => `- ${type}`).join('\n');
+  
+  // Base prompt construction
+  let prompt = `
+You are creating a professional English language worksheet for a ${sanitizeInput(lessonDuration)} minute lesson.
 
 TOPIC: ${sanitizeInput(lessonTopic)}
+GOAL: ${sanitizeInput(lessonObjective)}
+TEACHING PREFERENCES: ${sanitizeInput(preferences)}
+`;
 
-OBJECTIVE: ${sanitizeInput(lessonObjective)}
+  // Add optional parameters if provided
+  if (studentProfile) {
+    prompt += `\nSTUDENT PROFILE: ${sanitizeInput(studentProfile)}`;
+  }
+  
+  if (additionalInfo) {
+    prompt += `\nADDITIONAL INFORMATION: ${sanitizeInput(additionalInfo)}`;
+  }
 
-PREFERENCES: ${sanitizeInput(preferences)}
+  // Add exercise requirements
+  prompt += `
+Create a professional English language worksheet with EXACTLY ${exerciseCount} exercises for this ${lessonDuration} minute lesson.
 
-${studentProfile ? `STUDENT PROFILE: ${sanitizeInput(studentProfile)}` : ''}
+Include the following exercise types:
+${exerciseList}
 
-${additionalInfo ? `ADDITIONAL INFO: ${sanitizeInput(additionalInfo)}` : ''}
+For EACH exercise:
+1. Include a clear title
+2. Add appropriate instructions
+3. Create EXACTLY 10 items/questions/examples in each exercise
+4. Include correct answers visible only in teacher view
+5. Add a teaching tip section with practical advice for the teacher
 
-Guidelines:
-1. Adjust exercises count based on time (30min: 4, 45min: 6, 60min: 8)
-2. Include 10 examples per exercise
-3. Use specialized vocabulary for the topic
-4. Structure progressively from simple to complex
-5. Include: brief intro, key vocabulary, dialog/text using key terms, exercises matching preferences
-6. All content must be in English only
-7. Provide clear exercise instructions
-8. For teacher view, add tips for each exercise
+At the end of the worksheet, include a "Vocabulary Sheet" section with EXACTLY 15 key terms and their definitions, displayed in a 3-column grid.
 
-Make sure the worksheet is ready to use with minimal edits (<10%).`;
+Make sure all content is relevant to the topic and goal, and adapted to the specified lesson time.
+`;
+
+  return prompt;
 };
 
 // Security utility to sanitize user input before sending to API
@@ -107,7 +157,7 @@ export const generateWorksheetWithAI = async (params: WorksheetParams): Promise<
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert educational content creator for English language teaching. Create professional, well-structured worksheets that follow the guidelines provided.' 
+            content: 'You are an expert educational content creator for English language teaching. Create professional, well-structured worksheets that follow the guidelines provided. Focus on creating authentic, pedagogically sound teaching materials that can be used directly in the classroom.' 
           },
           { role: 'user', content: prompt }
         ],
