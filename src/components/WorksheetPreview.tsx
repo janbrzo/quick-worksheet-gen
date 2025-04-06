@@ -106,7 +106,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         // Calculate dimensions with wider margins
         const pageWidth = 210; // A4 width in mm
         const pageHeight = 297; // A4 height in mm
-        const margin = 15; // Margin in mm (increased from default)
+        const margin = 20; // Increased margin in mm
         
         const contentWidth = pageWidth - (2 * margin);
         const contentHeight = (canvas.height * contentWidth) / canvas.width;
@@ -132,7 +132,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
           if (i > 0 && i < pageCount - 1) {
             // Look for a good spot to break (e.g., by increasing y slightly to find a gap)
             // This is approximate but helps avoid cutting text
-            y -= 20; // Move up slightly to avoid cutting text
+            y -= 30; // Move up more to avoid cutting text
           }
           
           // Add the image to the PDF with adjusted margins
@@ -206,7 +206,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       // Calculate dimensions with wider margins
       const pageWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
-      const margin = 15; // Margin in mm
+      const margin = 20; // Increased margin in mm
       
       const contentWidth = pageWidth - (2 * margin);
       const contentHeight = (canvas.height * contentWidth) / canvas.width;
@@ -230,7 +230,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         
         // If not first page and not last page, try to find a better break point
         if (i > 0 && i < pageCount - 1) {
-          y -= 20; // Move up slightly to avoid cutting text
+          y -= 30; // Move up more to avoid cutting text
         }
         
         pdf.addImage(
@@ -330,20 +330,27 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
             
             <div className="mb-3">
               <span className="font-bold text-edu-primary block mb-1">Topic:</span> 
-              <span className="text-edu-dark">{data.title.replace('Worksheet: ', '')}</span>
+              <span className="text-edu-dark">{data.lessonTopic}</span>
             </div>
           </div>
           
           <div>
             <div className="mb-3">
               <span className="font-bold text-edu-primary block mb-1">Goal:</span> 
-              <span className="text-edu-dark">{data.content.split('\n')[0] || "Learning objectives"}</span>
+              <span className="text-edu-dark">{data.lessonObjective}</span>
             </div>
             
             <div className="mb-3">
               <span className="font-bold text-edu-primary block mb-1">Preferences:</span> 
-              <span className="text-edu-dark">{data.exercises.length} exercises</span>
+              <span className="text-edu-dark">{data.preferences}</span>
             </div>
+            
+            {data.studentProfile && (
+              <div className="mb-3">
+                <span className="font-bold text-edu-primary block mb-1">Student Profile:</span> 
+                <span className="text-edu-dark">{data.studentProfile}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

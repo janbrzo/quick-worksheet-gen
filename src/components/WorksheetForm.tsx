@@ -97,29 +97,28 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md w-full">
-      <h2 className="text-2xl font-bold mb-6 text-edu-dark">Create Your Worksheet</h2>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-edu-dark">Create Your Worksheet</h2>
+        
+        <div className="flex gap-2 mt-4 md:mt-0">
+          {['30', '45', '60'].map((duration) => (
+            <button
+              key={duration}
+              type="button"
+              onClick={() => updateField('lessonDuration', duration)}
+              className={`px-4 py-2 text-sm rounded-md border transition-all ${
+                formData.lessonDuration === duration
+                  ? 'bg-edu-primary text-white border-edu-primary'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-edu-light hover:border-edu-accent'
+              }`}
+            >
+              {duration} minutes
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Lesson Duration</label>
-          <div className="flex gap-2">
-            {['30', '45', '60'].map((duration) => (
-              <button
-                key={duration}
-                type="button"
-                onClick={() => updateField('lessonDuration', duration)}
-                className={`px-4 py-2 text-sm rounded-md border transition-all ${
-                  formData.lessonDuration === duration
-                    ? 'bg-edu-primary text-white border-edu-primary'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-edu-light hover:border-edu-accent'
-                }`}
-              >
-                {duration} minutes
-              </button>
-            ))}
-          </div>
-        </div>
-
         <TileSelector
           label="Lesson Topic*"
           placeholder="E.g., IT: debugging code, Business: negotiations"
@@ -127,9 +126,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           value={formData.lessonTopic}
           onChange={(value) => updateField('lessonTopic', value)}
         />
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
         <TileSelector
           label="Lesson Objective*"
           placeholder="E.g., Preparing for a presentation, Practicing vocabulary"
@@ -137,7 +134,9 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           value={formData.lessonObjective}
           onChange={(value) => updateField('lessonObjective', value)}
         />
-
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <TileSelector
           label="Preferences*"
           placeholder="E.g., Writing exercises, Dialogues"
@@ -145,9 +144,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           value={formData.preferences}
           onChange={(value) => updateField('preferences', value)}
         />
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <TileSelector
           label="Student Profile (optional)"
           placeholder="E.g., Goal: promotion in IT job, prefers writing..."
@@ -155,18 +152,18 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           value={formData.studentProfile || ''}
           onChange={(value) => updateField('studentProfile', value)}
         />
+      </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Additional Information (optional)
-          </label>
-          <textarea
-            value={formData.additionalInfo || ''}
-            onChange={(e) => updateField('additionalInfo', e.target.value)}
-            placeholder="E.g., Student has difficulty pronouncing 'r', Please include more IT examples"
-            className="w-full p-3 border border-gray-300 rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-edu-accent"
-          />
-        </div>
+      <div className="space-y-2 mb-6">
+        <label className="block text-sm font-medium text-gray-700">
+          Additional Information (optional)
+        </label>
+        <textarea
+          value={formData.additionalInfo || ''}
+          onChange={(e) => updateField('additionalInfo', e.target.value)}
+          placeholder="E.g., Student has difficulty pronouncing 'r', Please include more IT examples"
+          className="w-full p-3 border border-gray-300 rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-edu-accent"
+        />
       </div>
 
       <div className="flex gap-4 justify-center md:justify-end mt-8">

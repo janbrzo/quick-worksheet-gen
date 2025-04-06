@@ -70,7 +70,7 @@ const buildPrompt = (params: WorksheetParams): string => {
   // Create exercise list string
   const exerciseList = selectedExerciseTypes.map(type => `- ${type}`).join('\n');
   
-  // Base prompt construction
+  // Build a more detailed prompt for better quality exercises
   let prompt = `
 You are creating a professional English language worksheet for a ${sanitizeInput(lessonDuration)} minute lesson.
 
@@ -88,23 +88,29 @@ TEACHING PREFERENCES: ${sanitizeInput(preferences)}
     prompt += `\nADDITIONAL INFORMATION: ${sanitizeInput(additionalInfo)}`;
   }
 
-  // Add exercise requirements
+  // Add enhanced exercise requirements with more specific instructions
   prompt += `
-Create a professional English language worksheet with EXACTLY ${exerciseCount} exercises for this ${lessonDuration} minute lesson.
+Create a highly detailed, professional English language worksheet with EXACTLY ${exerciseCount} exercises for this ${lessonDuration} minute lesson.
 
 Include the following exercise types:
 ${exerciseList}
 
 For EACH exercise:
-1. Include a clear title
-2. Add appropriate instructions
+1. Include a clear, descriptive title
+2. Add explicit, step-by-step instructions for students
 3. Create EXACTLY 10 items/questions/examples in each exercise
-4. Include correct answers visible only in teacher view
-5. Add a teaching tip section with practical advice for the teacher
+4. Ensure all content is directly relevant to ${sanitizeInput(lessonTopic)}
+5. For teacher view, include:
+   - Correct answers for all questions
+   - Teaching tips with methodological advice
+   - Suggested time allocation
+   - Potential student difficulties and how to address them
 
-At the end of the worksheet, include a "Vocabulary Sheet" section with EXACTLY 15 key terms and their definitions, displayed in a 3-column grid.
+At the end of the worksheet, include a "Vocabulary Sheet" section with EXACTLY 15 key terms and their definitions related to ${sanitizeInput(lessonTopic)}, displayed in a structured format. Include example usage for each term where possible.
 
-Make sure all content is relevant to the topic and goal, and adapted to the specified lesson time.
+Make the exercises progressively more challenging, starting with vocabulary and recognition activities, building to production and creative communication tasks.
+
+Ensure all content is appropriate for the specified lesson duration, with activities that can be completed in the time available.
 `;
 
   return prompt;
@@ -157,12 +163,12 @@ export const generateWorksheetWithAI = async (params: WorksheetParams): Promise<
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert educational content creator for English language teaching. Create professional, well-structured worksheets that follow the guidelines provided. Focus on creating authentic, pedagogically sound teaching materials that can be used directly in the classroom.' 
+            content: 'You are an expert educational content creator for English language teaching with extensive experience creating worksheets for various industries and language levels. Create professional, pedagogically sound teaching materials that follow current best practices in language education. Focus on creating authentic, engaging content that addresses the specific topic, goals and preferences provided. Include practical activities that develop all language skills while maintaining relevance to the specified professional context.' 
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 3000
+        max_tokens: 4000
       })
     });
     
