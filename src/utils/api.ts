@@ -1,6 +1,5 @@
-
-// API utility for making OpenAI requests
 import { toast } from 'sonner';
+import React from 'react';
 
 const OPENAI_API_KEY = "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"; 
 
@@ -116,7 +115,11 @@ The worksheet should be practical and ready for immediate use by a teacher in cl
 };
 
 // This component will be used to capture the API key securely
-export const ApiKeyForm = ({ onSubmit, apiKey, setApiKey }) => {
+export const ApiKeyForm: React.FC<{
+  onSubmit: () => void;
+  apiKey: string;
+  setApiKey: (key: string) => void;
+}> = ({ onSubmit, apiKey, setApiKey }) => {
   return (
     <div className="p-4 border border-gray-200 rounded-lg bg-gray-50 mb-4">
       <h3 className="font-bold mb-2">Set OpenAI API Key</h3>
