@@ -2,7 +2,7 @@
 // API utility for making OpenAI requests
 import { toast } from 'sonner';
 
-const OPENAI_API_KEY = "YOUR_OPENAI_KEY"; // This will be replaced by user input
+const OPENAI_API_KEY = "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"; 
 
 export const generateWithAI = async (
   prompt: string, 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { FormData, WorksheetData, GenerationStatus, Exercise, VocabularyItem, GenerationStep } from '../types/worksheet';
 import { toast } from 'sonner';
@@ -53,6 +54,9 @@ export const useFormData = () => {
 
     setGenerationStatus(GenerationStatus.GENERATING);
     
+    // Increase the animation time to 60 seconds (from 35)
+    const minProcessingTime = 60000;
+    
     const steps = [
       { text: "Analyzing input data...", completed: false },
       { text: "Gathering teaching resources...", completed: false },
@@ -71,17 +75,20 @@ export const useFormData = () => {
     try {
       const startTime = Date.now();
       
-      const minProcessingTime = 35000;
-      
+      // Each step takes about 6 seconds to complete (60 seconds total)
       const stepsAnimation = new Promise<void>(async resolve => {
         for (let i = 0; i < steps.length; i++) {
-          await new Promise(r => setTimeout(r, 3000));
+          await new Promise(r => setTimeout(r, 6000));
           
           setGenerationSteps(prev => {
             const updated = [...prev];
             updated[i].completed = true;
             return updated;
           });
+          
+          // Update generation time every step
+          const currentTime = Math.round((Date.now() - startTime) / 1000);
+          setGenerationTime(currentTime);
         }
         resolve();
       });
@@ -92,6 +99,7 @@ export const useFormData = () => {
       let exercises;
       let vocabulary;
       
+      // Use OpenAI integration if key is available
       if (openAIKey) {
         try {
           const aiResponse = await generateWithAI(
@@ -124,6 +132,7 @@ export const useFormData = () => {
         vocabulary = generateVocabulary(formData, 15);
       }
       
+      // Wait for all steps to complete and minimum processing time
       await Promise.all([
         new Promise(resolve => setTimeout(resolve, minProcessingTime)),
         stepsAnimation
@@ -131,8 +140,9 @@ export const useFormData = () => {
       
       const endTime = Date.now();
       const actualTime = Math.round((endTime - startTime) / 1000);
-      const reportedTime = Math.max(35, Math.min(actualTime, 60));
-      setGenerationTime(reportedTime);
+      setGenerationTime(actualTime);
+      
+      const lessonDuration = formData.lessonDuration || "45";
       
       const mockWorksheet: WorksheetData = {
         title: `Worksheet: ${formData.lessonTopic}`,
@@ -140,8 +150,9 @@ export const useFormData = () => {
         teacherNotes: generateTeacherTips(formData),
         exercises: exercises,
         vocabulary: vocabulary,
-        generationTime: reportedTime,
-        sourceCount
+        generationTime: actualTime,
+        sourceCount,
+        lessonDuration
       };
       
       setWorksheetData(mockWorksheet);
