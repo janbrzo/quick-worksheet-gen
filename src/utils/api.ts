@@ -85,15 +85,22 @@ The worksheet should be practical and ready for immediate use by a teacher in cl
       })
     };
 
-    // Make the request to OpenAI (in a real application)
-    // const response = await fetch('https://api.openai.com/v1/chat/completions', requestOptions);
-    // const data = await response.json();
+    // Make the request to OpenAI
+    const response = await fetch('https://api.openai.com/v1/chat/completions', requestOptions);
+    const data = await response.json();
     
-    // Since we're just simulating for now, we'll return a placeholder
-    // Return a simulated response
+    // Process the response
+    if (data.error) {
+      throw new Error(data.error.message || "Error generating worksheet");
+    }
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error("No content received from AI service");
+    }
+    
     return {
       success: true,
-      content: "This is a simulated worksheet content. In production, this would be real content from OpenAI.",
+      content: data.choices[0].message.content,
       error: null
     };
     
