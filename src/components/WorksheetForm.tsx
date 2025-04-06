@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import TileSelector from './TileSelector';
@@ -96,10 +95,10 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-edu-dark">Worksheet Generator</h2>
+    <div className="bg-white p-6 rounded-lg shadow-md w-full">
+      <h2 className="text-2xl font-bold mb-6 text-edu-dark">Create Your Worksheet</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Lesson Duration</label>
           <div className="flex gap-2">
@@ -120,15 +119,13 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           </div>
         </div>
 
-        <div className="lg:col-span-2">
-          <TileSelector
-            label="Lesson Topic*"
-            placeholder="E.g., IT: debugging code, Business: negotiations"
-            tiles={randomizedTopics}
-            value={formData.lessonTopic}
-            onChange={(value) => updateField('lessonTopic', value)}
-          />
-        </div>
+        <TileSelector
+          label="Lesson Topic*"
+          placeholder="E.g., IT: debugging code, Business: negotiations"
+          tiles={randomizedTopics}
+          value={formData.lessonTopic}
+          onChange={(value) => updateField('lessonTopic', value)}
+        />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">

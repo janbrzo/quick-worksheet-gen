@@ -91,25 +91,25 @@ const Index = () => {
             
             {/* Enhanced feature icons in header */}
             <div className="grid grid-cols-4 gap-3 mt-4 md:mt-0">
-              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
-                <FileText className="h-5 w-5 mb-1" />
-                <span className="font-medium">Save Time</span>
-                <span className="text-xs hidden lg:block">5-min creation</span>
+              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
+                <FileText className="h-4 w-4 mb-1" />
+                <span className="text-xs font-medium">Save Time</span>
+                <span className="text-xxs hidden lg:block">5-min creation</span>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
-                <Zap className="h-5 w-5 mb-1" />
-                <span className="font-medium">Tailored</span>
-                <span className="text-xs hidden lg:block">Industry-focused</span>
+              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
+                <Zap className="h-4 w-4 mb-1" />
+                <span className="text-xs font-medium">Tailored</span>
+                <span className="text-xxs hidden lg:block">Industry-focused</span>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
-                <FileText className="h-5 w-5 mb-1" />
-                <span className="font-medium">Ready</span>
-                <span className="text-xs hidden lg:block">Professional format</span>
+              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
+                <FileText className="h-4 w-4 mb-1" />
+                <span className="text-xs font-medium">Ready</span>
+                <span className="text-xxs hidden lg:block">Professional format</span>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
-                <FileText className="h-5 w-5 mb-1" />
-                <span className="font-medium">Customizable</span>
-                <span className="text-xs hidden lg:block">Easy to edit</span>
+              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
+                <FileText className="h-4 w-4 mb-1" />
+                <span className="text-xs font-medium">Customizable</span>
+                <span className="text-xxs hidden lg:block">Easy to edit</span>
               </div>
             </div>
           </div>
@@ -117,9 +117,9 @@ const Index = () => {
       </header>
 
       <div className="container mx-auto px-4 pt-8 pb-16">
-        <main className="max-w-6xl mx-auto">
+        <main className="max-w-screen-xl mx-auto">
           {currentPage === 1 && (
-            <div className="w-full">
+            <div className="w-full flex justify-center">
               <WorksheetForm
                 formData={formData}
                 updateField={updateField}

@@ -13,51 +13,64 @@ export const generateWithAI = async (
   additionalInfo?: string
 ) => {
   try {
-    // Build a comprehensive prompt with all the details
+    // Determine the exercise count based on lesson duration
+    let exerciseCount = 6; // Default for 45 minutes
+    
+    if (duration === '30') {
+      exerciseCount = 4;
+    } else if (duration === '60') {
+      exerciseCount = 8;
+    }
+    
+    // Define exercise types based on count
+    const exerciseTypes = [
+      "Reading Passage with Comprehension Questions", 
+      "Vocabulary Matching", 
+      "Fill in the Blanks", 
+      "Multiple Choice Questions", 
+      "Speaking Practice with a Dialogue", 
+      "Discussion Questions"
+    ];
+    
+    // For 60-min lessons, add 2 more exercise types
+    let finalExerciseTypes = [...exerciseTypes];
+    if (exerciseCount === 8) {
+      finalExerciseTypes.push("Error Correction", "Role-play Scenario with Key Expressions");
+    }
+    
+    // For 30-min lessons, use only the first 4 exercise types
+    if (exerciseCount === 4) {
+      finalExerciseTypes = exerciseTypes.slice(0, 4);
+    }
+    
+    // Format the exercise list for the prompt
+    const exerciseList = finalExerciseTypes.map(type => `- ${type}`).join("\n");
+    
+    // Build a comprehensive and detailed prompt for better worksheet generation
     const fullPrompt = `
-Create a professional English teaching worksheet based on the following:
-
-LESSON DURATION: ${duration} minutes
+You are creating a professional English language worksheet for a ${duration}-minute lesson.
 
 TOPIC: ${topic}
-
-OBJECTIVE: ${objective}
-
-PREFERENCES: ${preferences}
-
+GOAL: ${objective}
+TEACHING PREFERENCES: ${preferences}
 ${studentProfile ? `STUDENT PROFILE: ${studentProfile}` : ''}
-
 ${additionalInfo ? `ADDITIONAL INFORMATION: ${additionalInfo}` : ''}
 
-Follow these guidelines:
+Create an English language worksheet with EXACTLY ${exerciseCount} exercises for this ${duration}-minute lesson.
 
-1. Adjust the number of exercises based on lesson duration:
-   - For 30 minutes: 4 exercises
-   - For 45 minutes: 6 exercises
-   - For 60 minutes: 8 exercises
+Include the following exercise types:
+${exerciseList}
 
-2. Each exercise should contain exactly 10 examples/words/points
+For EACH exercise:
+1. Include a clear title
+2. Add appropriate instructions
+3. Create EXACTLY 10 items/questions/examples in each exercise
+4. Include correct answers visible only in teacher view
+5. Add a teaching tip section with practical advice for the teacher
 
-3. Use specialized, industry-specific vocabulary related to the topic
+At the end of the worksheet, include a "Vocabulary Sheet" section with EXACTLY 15 key terms and their definitions, displayed in a structured format.
 
-4. Avoid generalities and overly simple vocabulary
-
-5. Structure the worksheet logically and progressively (from simpler to more difficult exercises)
-
-6. Include:
-   - A brief introduction to the topic (max 100 words)
-   - A list of exactly 10 key words/phrases related to the topic (with translation or definition)
-   - A dialogue or text (150-200 words) using key vocabulary
-   - Remaining exercises tailored to the given preferences and lesson time
-   - A short final exercise to consolidate the material
-
-7. All instructions should be clear and written in English
-
-8. Teacher tips should be included with each exercise
-
-9. All content must be in English only
-
-The worksheet should be practical and ready for immediate use by a teacher in class, with minimal need for editing (<10% corrections).
+Make sure all content is relevant to the topic and goal, and adapted to the specified lesson time.
 `;
 
     // OpenAI request configuration
@@ -72,7 +85,7 @@ The worksheet should be practical and ready for immediate use by a teacher in cl
         messages: [
           {
             role: "system", 
-            content: "You are an expert English language teacher specializing in creating professional, industry-specific worksheets. Your worksheets are always structured with clear sections, exercises designed in a logical progression, and include vocabulary and activities specific to the requested topic."
+            content: "You are an expert English language teacher specializing in creating professional, industry-specific worksheets. Your worksheets are always structured with clear sections, exercises designed in a logical progression, and include vocabulary and activities specific to the requested topic. Always create complete, ready-to-use worksheets with 10 items per exercise and practical teaching tips."
           },
           {
             role: "user",

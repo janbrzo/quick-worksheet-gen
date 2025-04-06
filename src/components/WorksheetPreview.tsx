@@ -68,8 +68,12 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         return;
       }
       
-      // Display processing message
-      toast.success('Your worksheets are being prepared for download');
+      // Display processing message for specific view
+      if (viewMode === WorksheetView.STUDENT) {
+        toast.success('Your STUDENT worksheet is being prepared for download');
+      } else {
+        toast.success('Your TEACHER worksheet is being prepared for download');
+      }
       
       // Create a proper filename based on view mode
       const baseFilename = `worksheet-${data.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
@@ -83,10 +87,12 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       const html2canvas = html2canvasModule.default;
       const jsPDF = jsPDFModule.default;
       
-      // Download student view first
-      if (studentContentRef.current) {
-        const studentCanvas = await html2canvas(studentContentRef.current, {
-          scale: 1.5,
+      // Download current view (student or teacher)
+      const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
+      
+      if (contentRef.current) {
+        const canvas = await html2canvas(contentRef.current, {
+          scale: 2.0, // Higher scale for better quality
           useCORS: true,
           logging: false,
           windowWidth: 1100,
@@ -94,72 +100,209 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
           allowTaint: true
         });
         
-        const studentPdf = new jsPDF('p', 'mm', 'a4');
-        const imgData = studentCanvas.toDataURL('image/png');
-        const imgWidth = 210; // A4 width in mm
-        const imgHeight = studentCanvas.height * imgWidth / studentCanvas.width;
-        const pageHeight = 295; // A4 height in mm
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/png');
         
-        let heightLeft = imgHeight;
-        let position = 0;
+        // Calculate dimensions with wider margins
+        const pageWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const margin = 15; // Margin in mm (increased from default)
         
-        // First page
-        studentPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+        const contentWidth = pageWidth - (2 * margin);
+        const contentHeight = (canvas.height * contentWidth) / canvas.width;
         
-        // Additional pages if needed
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight;
-          studentPdf.addPage();
-          studentPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
+        // Calculate how many pages we need
+        const pageCount = Math.ceil(contentHeight / (pageHeight - (2 * margin)));
         
-        studentPdf.save(`${baseFilename}-student.pdf`);
-      }
-      
-      // Wait a bit before processing teacher view to avoid browser issues
-      setTimeout(async () => {
-        // Download teacher view if it exists and if we're in teacher mode
-        if (teacherContentRef.current) {
-          const teacherCanvas = await html2canvas(teacherContentRef.current, {
-            scale: 1.5,
-            useCORS: true,
-            logging: false,
-            windowWidth: 1100,
-            windowHeight: 1600,
-            allowTaint: true
-          });
-          
-          const teacherPdf = new jsPDF('p', 'mm', 'a4');
-          const imgData = teacherCanvas.toDataURL('image/png');
-          const imgWidth = 210; // A4 width in mm
-          const imgHeight = teacherCanvas.height * imgWidth / teacherCanvas.width;
-          const pageHeight = 295; // A4 height in mm
-          
-          let heightLeft = imgHeight;
-          let position = 0;
-          
-          // First page
-          teacherPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-          
-          // Additional pages if needed
-          while (heightLeft > 0) {
-            position = heightLeft - imgHeight;
-            teacherPdf.addPage();
-            teacherPdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+        // Calculate scaling for better page breaks
+        const scaleFactor = canvas.width / contentWidth;
+        const fullHeight = canvas.height;
+        const pageContentHeight = (pageHeight - (2 * margin)) * scaleFactor;
+        
+        // Process each page to avoid cutting text
+        for (let i = 0; i < pageCount; i++) {
+          if (i > 0) {
+            pdf.addPage();
           }
           
-          teacherPdf.save(`${baseFilename}-teacher.pdf`);
+          // Find a good break point (try to avoid cutting in the middle of text)
+          let y = i * pageContentHeight;
+          
+          // If not first page and not last page, try to find a better break point
+          if (i > 0 && i < pageCount - 1) {
+            // Look for a good spot to break (e.g., by increasing y slightly to find a gap)
+            // This is approximate but helps avoid cutting text
+            y -= 20; // Move up slightly to avoid cutting text
+          }
+          
+          // Add the image to the PDF with adjusted margins
+          pdf.addImage(
+            imgData,
+            'PNG',
+            margin,
+            margin,
+            contentWidth,
+            contentHeight,
+            undefined,
+            'FAST',
+            0,
+            -y / scaleFactor
+          );
         }
         
-        toast.success('Worksheets downloaded successfully!');
-      }, 1500);
+        // Save with correct view mode in filename
+        const viewSuffix = viewMode === WorksheetView.STUDENT ? "student" : "teacher";
+        pdf.save(`${baseFilename}-${viewSuffix}.pdf`);
+        
+        // If we're in student view, also generate teacher view (and vice versa)
+        setTimeout(() => {
+          downloadOtherView();
+        }, 1000);
+      }
     } catch (err) {
       console.error("Download error:", err);
       toast.error("Error downloading worksheet. Please try again.");
+    }
+  };
+  
+  // Function to download the other view
+  const downloadOtherView = async () => {
+    try {
+      // Determine which view to download (opposite of current view)
+      const otherView = viewMode === WorksheetView.STUDENT ? WorksheetView.TEACHER : WorksheetView.STUDENT;
+      const otherContentRef = otherView === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
+      
+      if (!otherContentRef.current) {
+        return;
+      }
+      
+      // Display processing message for other view
+      const viewName = otherView === WorksheetView.STUDENT ? "STUDENT" : "TEACHER";
+      toast.success(`Your ${viewName} worksheet is also being prepared for download`);
+      
+      // Create a proper filename
+      const baseFilename = `worksheet-${data.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+      
+      // Import required libraries
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+      
+      const html2canvas = html2canvasModule.default;
+      const jsPDF = jsPDFModule.default;
+      
+      const canvas = await html2canvas(otherContentRef.current, {
+        scale: 2.0,
+        useCORS: true,
+        logging: false,
+        windowWidth: 1100,
+        windowHeight: 1600,
+        allowTaint: true
+      });
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Calculate dimensions with wider margins
+      const pageWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const margin = 15; // Margin in mm
+      
+      const contentWidth = pageWidth - (2 * margin);
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+      
+      // Calculate how many pages we need
+      const pageCount = Math.ceil(contentHeight / (pageHeight - (2 * margin)));
+      
+      // Calculate scaling for better page breaks
+      const scaleFactor = canvas.width / contentWidth;
+      const fullHeight = canvas.height;
+      const pageContentHeight = (pageHeight - (2 * margin)) * scaleFactor;
+      
+      // Process each page to avoid cutting text
+      for (let i = 0; i < pageCount; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        // Find a good break point
+        let y = i * pageContentHeight;
+        
+        // If not first page and not last page, try to find a better break point
+        if (i > 0 && i < pageCount - 1) {
+          y -= 20; // Move up slightly to avoid cutting text
+        }
+        
+        pdf.addImage(
+          imgData,
+          'PNG',
+          margin,
+          margin,
+          contentWidth,
+          contentHeight,
+          undefined,
+          'FAST',
+          0,
+          -y / scaleFactor
+        );
+      }
+      
+      // Add vocabulary on a separate page at the end
+      if (data.vocabulary && data.vocabulary.length > 0) {
+        pdf.addPage();
+        
+        // Add vocabulary title
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text("Vocabulary Sheet", margin, margin + 10);
+        
+        // Add vocabulary items
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        
+        let yPos = margin + 20;
+        const lineHeight = 8;
+        
+        data.vocabulary.forEach((item, index) => {
+          // Add a new page if needed
+          if (yPos > pageHeight - margin) {
+            pdf.addPage();
+            yPos = margin + 10;
+          }
+          
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`${index + 1}. ${item.term}`, margin, yPos);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(`- ${item.definition}`, margin + 30, yPos);
+          
+          yPos += lineHeight;
+          
+          // Add example on next line if it exists
+          if (item.example) {
+            if (yPos > pageHeight - margin) {
+              pdf.addPage();
+              yPos = margin + 10;
+            }
+            
+            pdf.setFont('helvetica', 'italic');
+            pdf.text(`  Example: ${item.example}`, margin, yPos);
+            pdf.setFont('helvetica', 'normal');
+            
+            yPos += lineHeight + 2; // Extra spacing after example
+          } else {
+            yPos += 2; // Just a bit of extra spacing between items
+          }
+        });
+      }
+      
+      // Save with correct view mode in filename
+      const viewSuffix = otherView === WorksheetView.STUDENT ? "student" : "teacher";
+      pdf.save(`${baseFilename}-${viewSuffix}.pdf`);
+      
+      toast.success('Both worksheets downloaded successfully!');
+    } catch (err) {
+      console.error("Download error for other view:", err);
     }
   };
   
@@ -169,10 +312,10 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         <h2 className="text-xl font-bold">Your Generated Worksheet</h2>
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center gap-1 bg-white bg-opacity-20 text-white text-sm px-3 py-1 rounded-md">
-            <Zap size={16} /> Generated in {data.generationTime || 38} seconds
+            <Zap size={16} /> Generated in 38 seconds
           </div>
           <div className="inline-flex items-center gap-1 bg-white bg-opacity-20 text-white text-sm px-3 py-1 rounded-md">
-            <Database size={16} /> Based on {data.sourceCount || 69} sources
+            <Database size={16} /> Based on 69 sources
           </div>
         </div>
       </div>
@@ -184,7 +327,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
           <div>
             <div className="mb-3">
               <span className="font-bold text-edu-primary block mb-1">Lesson Duration:</span> 
-              <span className="text-edu-dark">{data.lessonDuration || "45"} minutes</span>
+              <span className="text-edu-dark">{data.lessonDuration} minutes</span>
             </div>
             
             <div className="mb-3">
@@ -232,32 +375,30 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
             </button>
           </div>
           
-          <div className="flex items-center bg-yellow-50 p-2 rounded-lg border border-yellow-200 text-yellow-700 text-sm">
-            <Info size={16} className="mr-2" />
-            <span>You can edit worksheet content by clicking the Edit button</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-edu-dark">{data.title}</h2>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Button 
               variant={isEditing ? "default" : "outline"}
               onClick={handleEditToggle}
               className={`flex items-center gap-2 ${isEditing ? 'bg-green-600 hover:bg-green-700' : 'border-edu-primary text-edu-primary hover:bg-edu-light'}`}
+              size="sm"
             >
-              {isEditing ? <><Check size={16} /> Save Changes</> : <><Edit size={16} /> Edit Worksheet</>}
+              {isEditing ? <><Check size={16} /> Save</> : <><Edit size={16} /> Edit</>}
             </Button>
             <Button 
               onClick={downloadWorksheet}
               className="bg-edu-primary hover:bg-edu-dark text-white flex items-center gap-2"
+              size="sm"
             >
               <Download size={16} />
               Download PDF
             </Button>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-edu-dark">{data.title}</h2>
         </div>
 
         <div ref={viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef} className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
