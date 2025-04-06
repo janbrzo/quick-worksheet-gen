@@ -16,10 +16,22 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({ content, exercises,
     return null; // Editing UI is handled by the parent component
   }
 
+  // Extract title and overview from content
+  const contentLines = content.split('\n');
+  const title = contentLines.find(line => line.startsWith('# '))?.replace('# ', '') || '';
+  
+  // Remove title from content for separate rendering
+  const filteredContent = contentLines.filter(line => !line.startsWith('# ')).join('\n');
+
   return (
     <div>
-      <div className="mb-6">
-        {renderMarkdown(content)}
+      {/* Compact title and overview section */}
+      <div className="bg-gray-50 p-3 rounded-md border-l-4 border-edu-primary mb-4">
+        <h1 className="text-xl font-bold text-edu-dark">{title}</h1>
+      </div>
+      
+      <div className="mb-4">
+        {renderMarkdown(filteredContent)}
       </div>
       
       {exercises.map((exercise, index) => (

@@ -6,7 +6,7 @@ import GenerationProgress from '@/components/GenerationProgress';
 import FeatureSection from '@/components/FeatureSection';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { FileText, ArrowUp } from 'lucide-react';
+import { FileText, ArrowUp, Zap, Database, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -29,7 +29,7 @@ const Index = () => {
   // State for payment dialog
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(true); // Set to true to skip payment
   
   // State for generation modal
   const [showGenerationModal, setShowGenerationModal] = useState(false);
@@ -68,29 +68,6 @@ const Index = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
-  // Function to handle download with payment or promo
-  const handleDownloadWithPayment = () => {
-    if (promoCode.toLowerCase() === 'edooqoo') {
-      // Apply promo code
-      toast.success('Promo code applied! Downloading worksheet...');
-      setPaymentComplete(true);
-      setPaymentDialogOpen(false);
-    } else {
-      // Redirect to Stripe payment link
-      window.open('https://buy.stripe.com/dR69BW5Oq4MC52w9AA', '_blank');
-      toast.info('Redirecting to payment page. After payment, return to download your worksheet.');
-      
-      // For demo purposes, we'll simulate payment completion
-      // In a real app, this would be handled by a webhook from Stripe
-      setTimeout(() => {
-        setPaymentComplete(true);
-        toast.success('Payment received! You can now download your worksheets.');
-      }, 5000);
-      
-      setPaymentDialogOpen(false);
-    }
-  };
 
   // Scroll to top function
   const scrollToTop = () => {
@@ -112,19 +89,27 @@ const Index = () => {
               </p>
             </div>
             
-            {/* Feature tiles in header - smaller version */}
-            <div className="flex flex-wrap gap-2 mt-3 md:mt-0">
-              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
-                <span>Save Time</span>
+            {/* Enhanced feature icons in header */}
+            <div className="grid grid-cols-4 gap-3 mt-4 md:mt-0">
+              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
+                <FileText className="h-5 w-5 mb-1" />
+                <span className="font-medium">Save Time</span>
+                <span className="text-xs hidden lg:block">5-min creation</span>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
-                <span>Tailored Content</span>
+              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
+                <Zap className="h-5 w-5 mb-1" />
+                <span className="font-medium">Tailored</span>
+                <span className="text-xs hidden lg:block">Industry-focused</span>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
-                <span>Ready to Use</span>
+              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
+                <FileText className="h-5 w-5 mb-1" />
+                <span className="font-medium">Ready</span>
+                <span className="text-xs hidden lg:block">Professional format</span>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-md px-3 py-1.5 text-sm flex items-center gap-1">
-                <span>Customizable</span>
+              <div className="bg-white bg-opacity-20 rounded-md p-2 text-sm flex flex-col items-center text-center gap-1">
+                <FileText className="h-5 w-5 mb-1" />
+                <span className="font-medium">Customizable</span>
+                <span className="text-xs hidden lg:block">Easy to edit</span>
               </div>
             </div>
           </div>
@@ -132,49 +117,30 @@ const Index = () => {
       </header>
 
       <div className="container mx-auto px-4 pt-8 pb-16">
-        {/* Features section with descriptions - only on page 1 */}
-        {currentPage === 1 && <FeatureSection />}
-        
         <main className="max-w-6xl mx-auto">
           {currentPage === 1 && (
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="md:order-1">
-                <WorksheetForm
-                  formData={formData}
-                  updateField={updateField}
-                  generateWorksheet={() => {
-                    generateWorksheet();
-                  }}
-                  resetForm={resetForm}
-                  generationStatus={generationStatus}
-                />
-              </div>
-              
-              <div className="md:order-2">
-                <div className="bg-white p-8 rounded-lg shadow-md h-full flex flex-col items-center justify-center text-center">
-                  <div className="bg-edu-light p-6 rounded-full mb-6">
-                    <FileText size={48} className="text-edu-primary" />
-                  </div>
-                  <h2 className="text-2xl font-bold mb-4 text-edu-dark">
-                    Your worksheet will appear here
-                  </h2>
-                  <p className="text-gray-600 max-w-md">
-                    Fill out the form and click "Generate worksheet" to create
-                    a personalized teaching material for your English lesson.
-                  </p>
-                </div>
-              </div>
+            <div className="w-full">
+              <WorksheetForm
+                formData={formData}
+                updateField={updateField}
+                generateWorksheet={() => {
+                  generateWorksheet();
+                }}
+                resetForm={resetForm}
+                generationStatus={generationStatus}
+              />
             </div>
           )}
           
           {currentPage === 2 && (
             <div>
-              <div className="mb-6">
+              <div className="flex justify-between items-center mb-6">
                 <button 
                   onClick={() => goToPage(1)} 
                   className="text-edu-primary hover:text-edu-dark flex items-center gap-1"
                 >
-                  ← Back to Form
+                  <ArrowLeft size={18} />
+                  Create New Worksheet
                 </button>
               </div>
               

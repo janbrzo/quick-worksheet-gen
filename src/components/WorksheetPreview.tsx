@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
-import { Download, Star, Edit, Check, Info } from 'lucide-react';
+import { Download, Star, Edit, Check, Info, Zap, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -60,7 +60,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
     // Here you would typically send the feedback data to your backend
   };
 
-  // Function to download worksheets
+  // Function to download worksheets - now working without payment
   const downloadWorksheet = async () => {
     try {
       if (!studentContentRef.current && !teacherContentRef.current) {
@@ -165,48 +165,44 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   
   return (
     <div>
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-bold mb-4 text-edu-dark">Lesson Brief</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-              <span className="font-bold text-edu-primary block mb-1">Duration:</span> 
-              <span className="text-edu-dark text-lg">{data.lessonDuration || "45"} minutes</span>
-            </div>
-            
-            <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-              <span className="font-bold text-edu-primary block mb-1">Topic:</span> 
-              <span className="text-edu-dark text-lg">{data.title.replace('Worksheet: ', '')}</span>
-            </div>
+      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-4 rounded-lg mb-6 flex justify-between items-center">
+        <h2 className="text-xl font-bold">Your Generated Worksheet</h2>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center gap-1 bg-white bg-opacity-20 text-white text-sm px-3 py-1 rounded-md">
+            <Zap size={16} /> Generated in {data.generationTime || 38} seconds
           </div>
-          
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-              <span className="font-bold text-edu-primary block mb-1">Activities:</span> 
-              <span className="text-edu-dark text-lg">{data.exercises.length} exercises</span>
-            </div>
-            
-            <div className="bg-gradient-to-r from-edu-light to-white p-4 rounded-lg shadow-sm">
-              <span className="font-bold text-edu-primary block mb-1">Vocabulary:</span> 
-              <span className="text-edu-dark text-lg">{data.vocabulary?.length || 0} terms</span>
-            </div>
+          <div className="inline-flex items-center gap-1 bg-white bg-opacity-20 text-white text-sm px-3 py-1 rounded-md">
+            <Database size={16} /> Based on {data.sourceCount || 69} sources
           </div>
         </div>
+      </div>
+
+      <div className="bg-white p-6 rounded-lg shadow-md mb-6 border-l-4 border-indigo-500">
+        <h2 className="text-xl font-bold mb-4 text-edu-dark">Your Input Parameters</h2>
         
-        <div className="mt-6 pt-3 border-t border-gray-200 bg-edu-light bg-opacity-30 p-4 rounded-lg flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-md shadow-sm">
-            <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
-              <span className="text-edu-primary font-medium text-lg">{data.generationTime || 46}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div className="mb-3">
+              <span className="font-bold text-edu-primary block mb-1">Lesson Duration:</span> 
+              <span className="text-edu-dark">{data.lessonDuration || "45"} minutes</span>
             </div>
-            <span className="text-edu-dark">seconds to generate</span>
+            
+            <div className="mb-3">
+              <span className="font-bold text-edu-primary block mb-1">Topic:</span> 
+              <span className="text-edu-dark">{data.title.replace('Worksheet: ', '')}</span>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-md shadow-sm">
-            <div className="p-2 rounded-full bg-edu-primary bg-opacity-20">
-              <span className="text-edu-primary font-medium text-lg">{data.sourceCount || 55}</span>
+          <div>
+            <div className="mb-3">
+              <span className="font-bold text-edu-primary block mb-1">Goal:</span> 
+              <span className="text-edu-dark">{data.content.split('\n')[0] || "Learning objectives"}</span>
             </div>
-            <span className="text-edu-dark">sources used</span>
+            
+            <div className="mb-3">
+              <span className="font-bold text-edu-primary block mb-1">Preferences:</span> 
+              <span className="text-edu-dark">{data.exercises.length} exercises</span>
+            </div>
           </div>
         </div>
       </div>
@@ -245,7 +241,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
 
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-6 pb-3 border-b border-gray-100">
-          <h2 className="text-2xl font-bold text-edu-dark">{data.title}</h2>
+          <h2 className="text-xl font-bold text-edu-dark">{data.title}</h2>
           <div className="flex gap-2">
             <Button 
               variant={isEditing ? "default" : "outline"}
@@ -255,7 +251,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               {isEditing ? <><Check size={16} /> Save Changes</> : <><Edit size={16} /> Edit Worksheet</>}
             </Button>
             <Button 
-              onClick={paymentComplete ? downloadWorksheet : onDownload}
+              onClick={downloadWorksheet}
               className="bg-edu-primary hover:bg-edu-dark text-white flex items-center gap-2"
             >
               <Download size={16} />
