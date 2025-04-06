@@ -205,7 +205,7 @@ const Index = () => {
 
       {/* Generation Modal */}
       <Dialog open={showGenerationModal} onOpenChange={setShowGenerationModal}>
-        <DialogContent className="sm:max-w-md" showClose={false}>
+        <DialogContent className="sm:max-w-md">
           <div className="py-4">
             <GenerationProgress 
               status={generationStatus}

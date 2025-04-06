@@ -54,3 +54,11 @@ export interface FeedbackData {
   rating: number;
   comment: string;
 }
+
+export interface TileSelectorProps {
+  tiles: string[];
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
