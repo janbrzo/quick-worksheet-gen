@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
@@ -145,7 +144,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
             contentHeight,
             undefined,
             'FAST',
-            0,
             -y / scaleFactor
           );
         }
@@ -243,7 +241,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
           contentHeight,
           undefined,
           'FAST',
-          0,
           -y / scaleFactor
         );
       }
