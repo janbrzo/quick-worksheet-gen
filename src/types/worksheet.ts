@@ -1,14 +1,14 @@
 
-export enum GenerationStatus {
-  IDLE = 'IDLE',
-  GENERATING = 'GENERATING',
-  COMPLETED = 'COMPLETED',
-  ERROR = 'ERROR'
+export enum WorksheetView {
+  STUDENT = 'student',
+  TEACHER = 'teacher'
 }
 
-export enum WorksheetView {
-  STUDENT = 'STUDENT',
-  TEACHER = 'TEACHER'
+export enum GenerationStatus {
+  IDLE = 'idle',
+  GENERATING = 'generating',
+  COMPLETED = 'completed',
+  ERROR = 'error'
 }
 
 export interface FormData {
@@ -24,14 +24,30 @@ export interface Exercise {
   title: string;
   instructions: string;
   content: string;
-  type?: string;
+  type: 'vocabulary' | 'reading' | 'writing' | 'speaking' | 'grammar' | 'listening';
   teacherAnswers?: string;
+  duration?: number; // Adding duration field in minutes
 }
 
 export interface VocabularyItem {
   term: string;
   definition: string;
-  example: string;
+  example?: string;
+}
+
+export interface WorksheetData {
+  title: string;
+  content: string;
+  teacherNotes: string;
+  exercises: Exercise[];
+  vocabulary?: VocabularyItem[];
+  generationTime: number;
+  sourceCount: number;
+  lessonDuration: string;
+  lessonTopic: string;
+  lessonObjective: string;
+  preferences: string;
+  studentProfile?: string;
 }
 
 export interface GenerationStep {
@@ -39,31 +55,7 @@ export interface GenerationStep {
   completed: boolean;
 }
 
-export interface WorksheetData {
-  title: string;
-  content: string;
-  teacherNotes?: string;
-  exercises: Exercise[];
-  vocabulary?: VocabularyItem[];
-  generationTime?: number;
-  sourceCount?: number;
-  lessonDuration?: string;
-  // Adding the missing fields from FormData that we need to display
-  lessonTopic: string;
-  lessonObjective: string;
-  preferences: string;
-  studentProfile?: string;
-}
-
 export interface FeedbackData {
   rating: number;
   comment: string;
-}
-
-export interface TileSelectorProps {
-  tiles: string[];
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
 }

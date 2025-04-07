@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Exercise, WorksheetView } from '@/types/worksheet';
-import { Book, FileText, Edit, CheckSquare, List, Lightbulb } from 'lucide-react';
+import { Book, FileText, Edit, CheckSquare, List, Lightbulb, Clock } from 'lucide-react';
 
 interface WorksheetContentProps {
   content: string;
@@ -78,11 +78,20 @@ const renderExerciseContent = (exercise: Exercise, index: number, viewMode: Work
     <div key={index} className={`my-6 pb-6 border-b border-gray-200 ${
       index % 2 === 0 ? 'bg-edu-light bg-opacity-20 p-4 rounded-lg' : ''
     }`}>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-md bg-edu-primary text-white">
-          {getExerciseIcon(exercise.type)}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-edu-primary text-white">
+            {getExerciseIcon(exercise.type)}
+          </div>
+          <h3 className="font-bold text-lg text-edu-primary">{exercise.title}</h3>
         </div>
-        <h3 className="font-bold text-lg text-edu-primary">{exercise.title}</h3>
+        
+        {exercise.duration && (
+          <div className="flex items-center text-gray-600 bg-gray-100 px-2 py-1 rounded">
+            <Clock size={14} className="mr-1" />
+            <span className="text-xs font-medium">{exercise.duration} min</span>
+          </div>
+        )}
       </div>
       
       <div className="italic mb-4 pl-2 border-l-4 border-edu-accent py-1">{exercise.instructions}</div>
