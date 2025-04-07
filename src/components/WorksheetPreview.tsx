@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
@@ -37,7 +36,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   
   const handleEditToggle = () => {
     if (isEditing) {
-      // Save changes
       toast.success('Changes saved successfully');
     }
     setIsEditing(!isEditing);
@@ -60,10 +58,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   const submitFeedback = () => {
     toast.success(`Thank you for rating this worksheet ${feedbackData.rating}/5!`);
     setFeedbackDialogOpen(false);
-    // Here you would typically send the feedback data to your backend
   };
 
-  // Function to download worksheets
   const downloadWorksheet = async () => {
     await generatePDF(
       studentContentRef,
@@ -85,15 +81,14 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         handleDownloadWorksheet={downloadWorksheet}
       />
 
-      {/* New: Add an edit instruction banner when not in edit mode */}
       {!isEditing && (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-md">
+        <div className="bg-amber-50 border-l-4 border-amber-300 p-4 mb-4 rounded-md">
           <div className="flex">
             <div className="flex-shrink-0">
-              <Info className="h-5 w-5 text-blue-400" />
+              <Info className="h-5 w-5 text-amber-500" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-amber-700">
                 <span className="font-medium">Tip:</span> Click the "Edit" button in the toolbar above to customize this worksheet.
                 You can modify the overview, instructions, and exercise content.
               </p>

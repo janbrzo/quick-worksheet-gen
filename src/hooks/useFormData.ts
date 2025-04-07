@@ -61,7 +61,8 @@ export const useFormData = () => {
 
     setGenerationStatus(GenerationStatus.GENERATING);
     
-    const minProcessingTime = 60000;
+    // Reduced processing time to between 31-58 seconds
+    const minProcessingTime = Math.floor(Math.random() * (58000 - 31000 + 1)) + 31000;
     
     const steps = [
       { text: "Analyzing input data...", completed: false },
@@ -82,8 +83,11 @@ export const useFormData = () => {
       const startTime = Date.now();
       
       const stepsAnimation = new Promise<void>(async resolve => {
+        // Adjust step timing to distribute evenly across the new total time
+        const stepTime = minProcessingTime / steps.length;
+        
         for (let i = 0; i < steps.length; i++) {
-          await new Promise(r => setTimeout(r, 6000));
+          await new Promise(r => setTimeout(r, stepTime));
           
           setGenerationSteps(prev => {
             const updated = [...prev];
