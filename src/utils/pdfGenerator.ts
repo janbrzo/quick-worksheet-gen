@@ -47,7 +47,7 @@ export const generatePDF = async (
         onclone: (clonedDoc) => {
           // Make sure all content is visible in the cloned document for capture
           const content = clonedDoc.querySelector('#worksheet-content');
-          if (content) {
+          if (content instanceof HTMLElement) {
             content.style.height = 'auto';
             content.style.overflow = 'visible';
           }
@@ -199,7 +199,7 @@ const downloadOtherView = async (
       onclone: (clonedDoc) => {
         // Make sure all content is visible in the cloned document for capture
         const content = clonedDoc.querySelector('#worksheet-content');
-        if (content) {
+        if (content instanceof HTMLElement) {
           content.style.height = 'auto';
           content.style.overflow = 'visible';
         }
