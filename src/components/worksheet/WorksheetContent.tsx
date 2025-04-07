@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { Exercise, WorksheetView } from '@/types/worksheet';
-import { Book, FileText, Edit, CheckSquare, List, Lightbulb } from 'lucide-react';
+import { Exercise, WorksheetView, VocabularyItem } from '@/types/worksheet';
+import { Book, FileText, Edit, CheckSquare, List, Lightbulb, Clock } from 'lucide-react';
 
 interface WorksheetContentProps {
   content: string;
   exercises: Exercise[];
-  vocabulary: any[];
+  vocabulary: VocabularyItem[];
   viewMode: WorksheetView;
   isEditing: boolean;
 }
@@ -24,14 +24,18 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({ content, exercises,
   const filteredContent = contentLines.filter(line => !line.startsWith('# ')).join('\n');
 
   return (
-    <div>
+    <div id="worksheet-content">
       {/* Compact title and overview section */}
       <div className="bg-gray-50 p-3 rounded-md border-l-4 border-edu-primary mb-4">
         <h1 className="text-xl font-bold text-edu-dark">{title}</h1>
       </div>
       
-      <div className="mb-4">
-        {renderMarkdown(filteredContent)}
+      {/* Overview section with improved spacing */}
+      <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        <h2 className="font-bold text-lg text-edu-dark mb-2">Overview</h2>
+        <div className="text-gray-700">
+          {renderMarkdown(filteredContent)}
+        </div>
       </div>
       
       {exercises.map((exercise, index) => (
@@ -74,15 +78,26 @@ const renderExerciseContent = (exercise: Exercise, index: number, viewMode: Work
   // Determine if we should show answers based on view mode
   const showAnswers = viewMode === WorksheetView.TEACHER && exercise.teacherAnswers;
   
+  // Extract time estimate from exercise content if it exists
+  const timeEstimate = extractTimeEstimate(exercise.content) || extractTimeEstimate(exercise.instructions) || "10-15";
+  
   return (
     <div key={index} className={`my-6 pb-6 border-b border-gray-200 ${
       index % 2 === 0 ? 'bg-edu-light bg-opacity-20 p-4 rounded-lg' : ''
     }`}>
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-md bg-edu-primary text-white">
-          {getExerciseIcon(exercise.type)}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-edu-primary text-white">
+            {getExerciseIcon(exercise.type)}
+          </div>
+          <h3 className="font-bold text-lg text-edu-primary">{exercise.title}</h3>
         </div>
-        <h3 className="font-bold text-lg text-edu-primary">{exercise.title}</h3>
+        
+        {/* Time estimate badge */}
+        <div className="inline-flex items-center gap-1 text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+          <Clock size={14} className="text-edu-primary" />
+          <span>Time: {timeEstimate} minutes</span>
+        </div>
       </div>
       
       <div className="italic mb-4 pl-2 border-l-4 border-edu-accent py-1">{exercise.instructions}</div>
@@ -104,6 +119,13 @@ const renderExerciseContent = (exercise: Exercise, index: number, viewMode: Work
       )}
     </div>
   );
+};
+
+const extractTimeEstimate = (text: string): string | null => {
+  // Try to find time estimate patterns like "Time: 10 minutes" or "Duration: 5-7 minutes"
+  const timeRegex = /(?:time|duration|estimated time):\s*(\d+(?:-\d+)?)\s*(?:min|minutes|minute)/i;
+  const match = text?.match(timeRegex);
+  return match ? match[1] : null;
 };
 
 const getExerciseIcon = (type: Exercise['type']) => {
@@ -221,7 +243,7 @@ const renderReadingExercise = (content: string) => {
   );
 };
 
-const renderVocabularySection = (vocabItems: any[], viewMode: WorksheetView) => {
+const renderVocabularySection = (vocabItems: VocabularyItem[], viewMode: WorksheetView) => {
   // Group vocabulary items into columns
   const itemsPerColumn = Math.ceil(vocabItems.length / 3);
   
