@@ -48,6 +48,11 @@ export interface WorksheetData {
   generationTime?: number;
   sourceCount?: number;
   lessonDuration?: string;
+  // Adding the missing fields from FormData that we need to display
+  lessonTopic: string;
+  lessonObjective: string;
+  preferences: string;
+  studentProfile?: string;
 }
 
 export interface FeedbackData {

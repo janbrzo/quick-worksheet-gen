@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { FormData, WorksheetData, GenerationStatus, Exercise, VocabularyItem, GenerationStep } from '../types/worksheet';
 import { toast } from 'sonner';
@@ -54,7 +53,6 @@ export const useFormData = () => {
 
     setGenerationStatus(GenerationStatus.GENERATING);
     
-    // Increase the animation time to 60 seconds (from 35)
     const minProcessingTime = 60000;
     
     const steps = [
@@ -75,7 +73,6 @@ export const useFormData = () => {
     try {
       const startTime = Date.now();
       
-      // Each step takes about 6 seconds to complete (60 seconds total)
       const stepsAnimation = new Promise<void>(async resolve => {
         for (let i = 0; i < steps.length; i++) {
           await new Promise(r => setTimeout(r, 6000));
@@ -86,7 +83,6 @@ export const useFormData = () => {
             return updated;
           });
           
-          // Update generation time every step
           const currentTime = Math.round((Date.now() - startTime) / 1000);
           setGenerationTime(currentTime);
         }
@@ -99,7 +95,6 @@ export const useFormData = () => {
       let exercises;
       let vocabulary;
       
-      // Use OpenAI integration if key is available
       if (openAIKey) {
         try {
           const aiResponse = await generateWithAI(
@@ -132,7 +127,6 @@ export const useFormData = () => {
         vocabulary = generateVocabulary(formData, 15);
       }
       
-      // Wait for all steps to complete and minimum processing time
       await Promise.all([
         new Promise(resolve => setTimeout(resolve, minProcessingTime)),
         stepsAnimation
@@ -152,7 +146,11 @@ export const useFormData = () => {
         vocabulary: vocabulary,
         generationTime: actualTime,
         sourceCount,
-        lessonDuration
+        lessonDuration,
+        lessonTopic: formData.lessonTopic,
+        lessonObjective: formData.lessonObjective,
+        preferences: formData.preferences,
+        studentProfile: formData.studentProfile
       };
       
       setWorksheetData(mockWorksheet);
