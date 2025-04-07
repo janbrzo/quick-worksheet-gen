@@ -49,10 +49,21 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
           <Button 
             variant={isEditing ? "default" : "outline"}
             onClick={handleEditToggle}
-            className={`flex items-center gap-2 ${isEditing ? 'bg-green-600 hover:bg-green-700' : 'border-edu-primary text-edu-primary hover:bg-edu-light'}`}
+            className={`flex items-center gap-2 ${
+              isEditing 
+                ? 'bg-green-600 hover:bg-green-700 text-white animate-pulse' 
+                : 'border-edu-primary text-edu-primary hover:bg-edu-light relative overflow-hidden group'
+            }`}
             size="sm"
           >
-            {isEditing ? <><Check size={16} /> Save</> : <><Edit size={16} /> Edit</>}
+            {isEditing ? (
+              <><Check size={16} /> Save Changes</>
+            ) : (
+              <>
+                <Edit size={16} /> Edit Worksheet
+                <span className="absolute inset-0 w-full h-full bg-edu-primary opacity-10 transform translate-x-full group-hover:translate-x-0 transition-transform duration-300"></span>
+              </>
+            )}
           </Button>
           <Button 
             onClick={handleDownloadWorksheet}

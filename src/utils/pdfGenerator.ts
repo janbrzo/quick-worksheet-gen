@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { WorksheetView, WorksheetData } from '@/types/worksheet';
 
@@ -37,12 +36,42 @@ export const generatePDF = async (
     const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
     
     if (contentRef.current) {
+      // Apply styles before capturing
+      const prepareForCapture = (element: HTMLElement) => {
+        // Force all elements to be visible
+        const origStyles = {
+          height: element.style.height,
+          overflow: element.style.overflow,
+          display: element.style.display
+        };
+        
+        element.style.height = 'auto';
+        element.style.overflow = 'visible';
+        element.style.display = 'block';
+        
+        return origStyles;
+      };
+      
+      // Prepare the content for capture
+      const origStyles = prepareForCapture(contentRef.current);
+      
+      // Get all exercise elements to properly calculate page breaks
+      const exerciseElements = contentRef.current.querySelectorAll('[class*="border-b border-gray-200"]');
+      const exercisePositions = Array.from(exerciseElements).map(el => {
+        const rect = el.getBoundingClientRect();
+        return { 
+          top: rect.top + window.scrollY,
+          bottom: rect.bottom + window.scrollY
+        };
+      });
+      
+      // Create canvas with higher density for better quality
       const canvas = await html2canvas(contentRef.current, {
         scale: 2.0, // Higher scale for better quality
         useCORS: true,
         logging: false,
-        windowWidth: 1100,
-        windowHeight: 1600,
+        width: contentRef.current.offsetWidth,
+        height: contentRef.current.scrollHeight,
         allowTaint: true,
         onclone: (clonedDoc) => {
           // Make sure all content is visible in the cloned document for capture
@@ -54,53 +83,78 @@ export const generatePDF = async (
         }
       });
       
+      // Create new PDF document
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgData = canvas.toDataURL('image/png');
       
-      // Calculate dimensions with wider margins
+      // PDF dimensions
       const pageWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
-      const margin = 20; // Increased margin in mm
+      const margin = 15; // Margin in mm
       
+      // Calculate content dimensions
       const contentWidth = pageWidth - (2 * margin);
       const contentHeight = (canvas.height * contentWidth) / canvas.width;
       
-      // Calculate how many pages we need
-      const pageCount = Math.ceil(contentHeight / (pageHeight - (2 * margin)));
-      
       // Calculate scaling for better page breaks
       const scaleFactor = canvas.width / contentWidth;
-      const fullHeight = canvas.height;
-      const pageContentHeight = (pageHeight - (2 * margin)) * scaleFactor;
+      const pageContentHeight = pageHeight - (2 * margin);
       
-      // Process each page to avoid cutting text
-      for (let i = 0; i < pageCount; i++) {
-        if (i > 0) {
-          pdf.addPage();
-        }
-        
-        // Find a good break point (try to avoid cutting in the middle of text)
-        let y = i * pageContentHeight;
-        
-        // If not first page and not last page, try to find a better break point
-        if (i > 0 && i < pageCount - 1) {
-          // Look for a good spot to break (e.g., by increasing y slightly to find a gap)
-          // This is approximate but helps avoid cutting text
-          y -= 50; // Move up more to avoid cutting text
-        }
-        
-        // Add the image to the PDF with adjusted margins
+      // Function to add image to PDF with proper positioning
+      const addImageToPdf = (pdf: any, imgData: string, startY: number, height: number) => {
         pdf.addImage(
           imgData,
           'PNG',
-          margin,
-          margin,
-          contentWidth,
-          contentHeight,
-          undefined,
-          'FAST',
-          -y / scaleFactor
+          margin, // x position
+          margin, // y position
+          contentWidth, // width
+          contentHeight, // total height
+          undefined, // alias
+          'FAST', // compression
+          0, // rotation
+          -startY / scaleFactor // crop start position
         );
+      };
+      
+      // Split the content into chunks that fit on a page
+      let y = 0;
+      let remainingHeight = contentHeight;
+      let pageCount = 0;
+      
+      while (remainingHeight > 0) {
+        if (pageCount > 0) {
+          pdf.addPage();
+        }
+        
+        // Calculate how much content can fit on this page
+        const pageContentInPoints = pageContentHeight * scaleFactor;
+        const heightOnThisPage = Math.min(pageContentInPoints, remainingHeight);
+        
+        // Try to find good break points at exercise boundaries
+        let breakPoint = y + heightOnThisPage;
+        
+        // Adjust breakpoint to avoid cutting in the middle of exercises
+        for (const pos of exercisePositions) {
+          if (pos.top > y && pos.top < breakPoint) {
+            // Found an exercise starting in this page
+            if (pos.top - y < heightOnThisPage * 0.7) {
+              // If it's in the first 70% of the page, include it
+              continue;
+            } else {
+              // Otherwise, break before this exercise
+              breakPoint = pos.top;
+              break;
+            }
+          }
+        }
+        
+        // Add the content section to this page
+        addImageToPdf(pdf, imgData, y, heightOnThisPage);
+        
+        // Update for next page
+        y += (breakPoint - y);
+        remainingHeight = contentHeight - y / scaleFactor;
+        pageCount++;
       }
       
       // Add vocabulary on a separate page at the end
@@ -151,6 +205,13 @@ export const generatePDF = async (
         });
       }
       
+      // Restore original styles
+      if (contentRef.current) {
+        contentRef.current.style.height = origStyles.height;
+        contentRef.current.style.overflow = origStyles.overflow;
+        contentRef.current.style.display = origStyles.display;
+      }
+      
       // Save with correct view mode in filename
       const viewSuffix = viewMode === WorksheetView.STUDENT ? "student" : "teacher";
       pdf.save(`${baseFilename}-${viewSuffix}.pdf`);
@@ -189,12 +250,41 @@ const downloadOtherView = async (
     const viewName = otherView === WorksheetView.STUDENT ? "STUDENT" : "TEACHER";
     toast.success(`Your ${viewName} worksheet is also being prepared for download`);
     
+    // Apply styles before capturing
+    const prepareForCapture = (element: HTMLElement) => {
+      // Force all elements to be visible
+      const origStyles = {
+        height: element.style.height,
+        overflow: element.style.overflow,
+        display: element.style.display
+      };
+      
+      element.style.height = 'auto';
+      element.style.overflow = 'visible';
+      element.style.display = 'block';
+      
+      return origStyles;
+    };
+    
+    // Prepare the content for capture
+    const origStyles = prepareForCapture(otherContentRef.current);
+    
+    // Get all exercise elements to properly calculate page breaks
+    const exerciseElements = otherContentRef.current.querySelectorAll('[class*="border-b border-gray-200"]');
+    const exercisePositions = Array.from(exerciseElements).map(el => {
+      const rect = el.getBoundingClientRect();
+      return { 
+        top: rect.top + window.scrollY,
+        bottom: rect.bottom + window.scrollY
+      };
+    });
+    
     const canvas = await html2canvas(otherContentRef.current, {
       scale: 2.0,
       useCORS: true,
       logging: false,
-      windowWidth: 1100,
-      windowHeight: 1600,
+      width: otherContentRef.current.offsetWidth,
+      height: otherContentRef.current.scrollHeight,
       allowTaint: true,
       onclone: (clonedDoc) => {
         // Make sure all content is visible in the cloned document for capture
@@ -206,50 +296,78 @@ const downloadOtherView = async (
       }
     });
     
+    // Create new PDF document
     const pdf = new jsPDF('p', 'mm', 'a4');
     const imgData = canvas.toDataURL('image/png');
     
-    // Calculate dimensions with wider margins
+    // PDF dimensions
     const pageWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
-    const margin = 20; // Increased margin in mm
+    const margin = 15; // Margin in mm
     
+    // Calculate content dimensions
     const contentWidth = pageWidth - (2 * margin);
     const contentHeight = (canvas.height * contentWidth) / canvas.width;
     
-    // Calculate how many pages we need
-    const pageCount = Math.ceil(contentHeight / (pageHeight - (2 * margin)));
-    
     // Calculate scaling for better page breaks
     const scaleFactor = canvas.width / contentWidth;
-    const fullHeight = canvas.height;
-    const pageContentHeight = (pageHeight - (2 * margin)) * scaleFactor;
+    const pageContentHeight = pageHeight - (2 * margin);
     
-    // Process each page to avoid cutting text
-    for (let i = 0; i < pageCount; i++) {
-      if (i > 0) {
-        pdf.addPage();
-      }
-      
-      // Find a good break point
-      let y = i * pageContentHeight;
-      
-      // If not first page and not last page, try to find a better break point
-      if (i > 0 && i < pageCount - 1) {
-        y -= 50; // Move up more to avoid cutting text
-      }
-      
+    // Function to add image to PDF with proper positioning
+    const addImageToPdf = (pdf: any, imgData: string, startY: number, height: number) => {
       pdf.addImage(
         imgData,
         'PNG',
-        margin,
-        margin,
-        contentWidth,
-        contentHeight,
-        undefined,
-        'FAST',
-        -y / scaleFactor
+        margin, // x position
+        margin, // y position
+        contentWidth, // width
+        contentHeight, // total height
+        undefined, // alias
+        'FAST', // compression
+        0, // rotation
+        -startY / scaleFactor // crop start position
       );
+    };
+    
+    // Split the content into chunks that fit on a page
+    let y = 0;
+    let remainingHeight = contentHeight;
+    let pageCount = 0;
+    
+    while (remainingHeight > 0) {
+      if (pageCount > 0) {
+        pdf.addPage();
+      }
+      
+      // Calculate how much content can fit on this page
+      const pageContentInPoints = pageContentHeight * scaleFactor;
+      const heightOnThisPage = Math.min(pageContentInPoints, remainingHeight);
+      
+      // Try to find good break points at exercise boundaries
+      let breakPoint = y + heightOnThisPage;
+      
+      // Adjust breakpoint to avoid cutting in the middle of exercises
+      for (const pos of exercisePositions) {
+        if (pos.top > y && pos.top < breakPoint) {
+          // Found an exercise starting in this page
+          if (pos.top - y < heightOnThisPage * 0.7) {
+            // If it's in the first 70% of the page, include it
+            continue;
+          } else {
+            // Otherwise, break before this exercise
+            breakPoint = pos.top;
+            break;
+          }
+        }
+      }
+      
+      // Add the content section to this page
+      addImageToPdf(pdf, imgData, y, heightOnThisPage);
+      
+      // Update for next page
+      y += (breakPoint - y);
+      remainingHeight = contentHeight - y / scaleFactor;
+      pageCount++;
     }
     
     // Add vocabulary on a separate page at the end
@@ -298,6 +416,13 @@ const downloadOtherView = async (
           yPos += 2; // Just a bit of extra spacing between items
         }
       });
+    }
+    
+    // Restore original styles
+    if (otherContentRef.current) {
+      otherContentRef.current.style.height = origStyles.height;
+      otherContentRef.current.style.overflow = origStyles.overflow;
+      otherContentRef.current.style.display = origStyles.display;
     }
     
     // Save with correct view mode in filename

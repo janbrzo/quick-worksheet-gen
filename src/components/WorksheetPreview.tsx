@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
-import { Star } from 'lucide-react';
+import { Star, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import WorksheetContent from './worksheet/WorksheetContent';
 import WorksheetEditor from './worksheet/WorksheetEditor';
@@ -85,6 +85,23 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         handleDownloadWorksheet={downloadWorksheet}
       />
 
+      {/* New: Add an edit instruction banner when not in edit mode */}
+      {!isEditing && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Info className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">Tip:</span> Click the "Edit" button in the toolbar above to customize this worksheet.
+                You can modify the overview, instructions, and exercise content.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100">
           <h2 className="text-lg font-bold text-edu-dark">{data.title}</h2>
@@ -93,6 +110,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         <div 
           ref={viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef} 
           className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6"
+          id="worksheet-content"
         >
           {!isEditing ? (
             <WorksheetContent 

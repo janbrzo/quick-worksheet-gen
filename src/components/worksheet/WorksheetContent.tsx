@@ -26,14 +26,14 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({ content, exercises,
   return (
     <div id="worksheet-content">
       {/* Compact title and overview section */}
-      <div className="bg-gray-50 p-3 rounded-md border-l-4 border-edu-primary mb-4">
+      <div className="bg-gray-50 p-4 rounded-md border-l-4 border-edu-primary mb-4">
         <h1 className="text-xl font-bold text-edu-dark">{title}</h1>
       </div>
       
-      {/* Overview section with improved spacing */}
+      {/* Overview section with improved spacing and styling */}
       <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
         <h2 className="font-bold text-lg text-edu-dark mb-2">Overview</h2>
-        <div className="text-gray-700">
+        <div className="text-gray-700 space-y-2">
           {renderMarkdown(filteredContent)}
         </div>
       </div>

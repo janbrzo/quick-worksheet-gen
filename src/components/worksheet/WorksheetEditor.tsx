@@ -2,7 +2,7 @@
 import React from 'react';
 import { Exercise, WorksheetView } from '@/types/worksheet';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, AlertTriangle, Clock } from 'lucide-react';
+import { Edit, AlertTriangle, Clock, Info } from 'lucide-react';
 
 interface WorksheetEditorProps {
   content: string;
@@ -26,7 +26,7 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           <Edit size={20} className="text-yellow-600" />
         </div>
         <div>
-          <p className="font-medium">Editing Mode</p>
+          <p className="font-medium">Editing Mode Active</p>
           <p className="text-sm">Make your changes and click "Save Changes" when done. All modifications will be included in the downloaded PDF.</p>
         </div>
       </div>
@@ -101,7 +101,10 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content
+              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Remember to add time estimates</span>
+            </label>
             <Textarea
               value={exercise.content}
               onChange={(e) => onExerciseChange(index, 'content', e.target.value)}
