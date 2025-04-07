@@ -100,8 +100,7 @@ For EACH exercise:
 2. Add explicit, step-by-step instructions for students
 3. Create EXACTLY 10 items/questions/examples in each exercise
 4. Ensure all content is directly relevant to ${sanitizeInput(lessonTopic)}
-5. Add a time estimate for each exercise (e.g., "Time: 10 minutes")
-6. For teacher view, include:
+5. For teacher view, include:
    - Correct answers for all questions
    - Teaching tips with methodological advice
    - Suggested time allocation
