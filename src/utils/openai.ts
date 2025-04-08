@@ -34,10 +34,14 @@ const buildPrompt = (params: WorksheetParams): string => {
   
   // Determine the exercise count based on lesson duration
   let exerciseCount = 6; // Default for 45 min
+  let lessonDurationMinutes = "45";
+  
   if (lessonDuration === '30') {
     exerciseCount = 4;
+    lessonDurationMinutes = "30";
   } else if (lessonDuration === '60') {
     exerciseCount = 8;
+    lessonDurationMinutes = "60";
   }
   
   // Define exercise types based on count
@@ -70,14 +74,13 @@ const buildPrompt = (params: WorksheetParams): string => {
   // Create exercise list string
   const exerciseList = selectedExerciseTypes.map(type => `- ${type}`).join('\n');
   
-  // Build a more detailed prompt for better quality exercises
+  // Build a more detailed, structured prompt for better quality worksheets
   let prompt = `
-You are creating a professional English language worksheet for a ${sanitizeInput(lessonDuration)} minute lesson.
+You are an expert English language teacher creating a highly specific, professional worksheet for a ${lessonDurationMinutes}-minute lesson.
 
 TOPIC: ${sanitizeInput(lessonTopic)}
 GOAL: ${sanitizeInput(lessonObjective)}
-TEACHING PREFERENCES: ${sanitizeInput(preferences)}
-`;
+TEACHING PREFERENCES: ${sanitizeInput(preferences)}`;
 
   // Add optional parameters if provided
   if (studentProfile) {
@@ -88,30 +91,43 @@ TEACHING PREFERENCES: ${sanitizeInput(preferences)}
     prompt += `\nADDITIONAL INFORMATION: ${sanitizeInput(additionalInfo)}`;
   }
 
-  // Add enhanced exercise requirements with more specific instructions
+  // Enhanced prompt with clear structure guidelines
   prompt += `
-Create a highly detailed, professional English language worksheet with EXACTLY ${exerciseCount} exercises for this ${lessonDuration} minute lesson.
+Create a professional, context-specific English language worksheet with EXACTLY ${exerciseCount} exercises that follows this precise structure:
 
-Include the following exercise types:
+## WORKSHEET STRUCTURE:
+1. Start with a brief lesson overview (1-2 sentences) highlighting the main focus and structure.
+2. Include EXACTLY ${exerciseCount} exercises, clearly numbered as "Exercise 1", "Exercise 2", etc.
+3. End with a vocabulary reference section.
+
+## REQUIRED EXERCISE TYPES:
 ${exerciseList}
 
-For EACH exercise:
-1. Include a clear, descriptive title
-2. Add explicit, step-by-step instructions for students
-3. Create EXACTLY 10 items/questions/examples in each exercise
-4. Ensure all content is directly relevant to ${sanitizeInput(lessonTopic)}
-5. For teacher view, include:
-   - Correct answers for all questions
+## FOR EACH EXERCISE:
+1. Clear title (e.g., "Exercise 1: Reading Comprehension")
+2. Specific, step-by-step instructions for students
+3. EXACTLY 10 items/questions/examples per exercise
+4. Content directly relevant to ${sanitizeInput(lessonTopic)} with industry-specific terminology
+5. FOR TEACHER VIEW ONLY: 
+   - All correct answers clearly marked
    - Teaching tips with methodological advice
-   - Suggested time allocation
-   - Potential student difficulties and how to address them
+   - Estimated time allocation for the exercise
+   - Common student difficulties and how to address them
 
-At the end of the worksheet, include a "Vocabulary Sheet" section with EXACTLY 15 key terms and their definitions related to ${sanitizeInput(lessonTopic)}, displayed in a structured format. Include example usage for each term where possible.
+## VOCABULARY REFERENCE SECTION:
+- Include EXACTLY 15 key terms and their definitions related to ${sanitizeInput(lessonTopic)}
+- Format in a clear, structured list with examples of usage where appropriate
+- Ensure vocabulary is directly relevant to the professional context
 
-Make the exercises progressively more challenging, starting with vocabulary and recognition activities, building to production and creative communication tasks.
+## QUALITY REQUIREMENTS:
+- Use professional, error-free language appropriate for teaching
+- Include industry-specific vocabulary and terminology throughout
+- Design exercises that progressively increase in difficulty
+- Balance receptive skills (reading, listening) and productive skills (writing, speaking)
+- Ensure all content can realistically be completed in ${lessonDurationMinutes} minutes
+- Make the worksheet ready-to-use with minimal editing required
 
-Ensure all content is appropriate for the specified lesson duration, with activities that can be completed in the time available.
-`;
+Format the entire worksheet as clearly structured text with proper exercise numbering, spacing, and formatting for easy readability.`;
 
   return prompt;
 };
@@ -163,7 +179,7 @@ export const generateWorksheetWithAI = async (params: WorksheetParams): Promise<
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert educational content creator for English language teaching with extensive experience creating worksheets for various industries and language levels. Create professional, pedagogically sound teaching materials that follow current best practices in language education. Focus on creating authentic, engaging content that addresses the specific topic, goals and preferences provided. Include practical activities that develop all language skills while maintaining relevance to the specified professional context.' 
+            content: 'You are an expert educational content creator for English language teaching with extensive experience creating worksheets for various industries and language levels. Create professional, pedagogically sound teaching materials that follow current best practices in language education. Focus on creating authentic, engaging content that addresses the specific topic, goals and preferences provided. Include practical activities that develop all language skills while maintaining relevance to the specified professional context. Format your response as a neatly structured document that could be directly printed and used in class.' 
           },
           { role: 'user', content: prompt }
         ],
