@@ -48,6 +48,7 @@ export interface WorksheetData {
   lessonObjective: string;
   preferences: string;
   studentProfile?: string;
+  additionalInfo?: string;
 }
 
 export interface GenerationStep {

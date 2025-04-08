@@ -34,7 +34,7 @@ const InputParametersPanel: React.FC<InputParametersPanelProps> = ({ data }) => 
           </div>
           <div>
             <span className="block font-medium text-gray-700">Topic</span>
-            <span className="text-gray-600">{data.topic}</span>
+            <span className="text-gray-600">{data.lessonTopic}</span>
           </div>
         </div>
         
@@ -44,7 +44,7 @@ const InputParametersPanel: React.FC<InputParametersPanelProps> = ({ data }) => 
           </div>
           <div>
             <span className="block font-medium text-gray-700">Objective</span>
-            <span className="text-gray-600">{data.objective}</span>
+            <span className="text-gray-600">{data.lessonObjective}</span>
           </div>
         </div>
         
