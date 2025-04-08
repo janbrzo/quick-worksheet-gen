@@ -1,8 +1,7 @@
 
 import { toast } from 'sonner';
 
-const OPENAI_API_KEY = "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"; 
-
+// Remove the hardcoded API key and get it from the function parameter
 export const generateWithAI = async (
   prompt: string, 
   duration: string, 
@@ -13,6 +12,17 @@ export const generateWithAI = async (
   additionalInfo?: string
 ) => {
   try {
+    // Get the API key from session storage
+    const apiKey = sessionStorage.getItem('openai_api_key');
+    
+    if (!apiKey) {
+      return {
+        success: false,
+        content: null,
+        error: "No API key available. Please provide an OpenAI API key."
+      };
+    }
+    
     // Determine the exercise count based on lesson duration
     let exerciseCount = 6; // Default for 45 minutes
     let lessonDurationMinutes = "45";
@@ -101,7 +111,7 @@ Format the entire worksheet as clearly structured text with proper exercise numb
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: "gpt-4o",
@@ -122,13 +132,16 @@ Format the entire worksheet as clearly structured text with proper exercise numb
 
     // Make the request to OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', requestOptions);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      throw new Error(errorData.error?.message || `API error: ${response.status}`);
+    }
+    
     const data = await response.json();
     
     // Process the response
-    if (data.error) {
-      throw new Error(data.error.message || "Error generating worksheet");
-    }
-    
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error("No content received from AI service");
     }
@@ -141,7 +154,7 @@ Format the entire worksheet as clearly structured text with proper exercise numb
     
   } catch (error) {
     console.error("OpenAI API Error:", error);
-    toast.error("Failed to generate worksheet with AI. Using fallback method.");
+    toast.error(`Failed to generate worksheet with AI: ${error.message || 'Unknown error'}`);
     return {
       success: false,
       content: null,

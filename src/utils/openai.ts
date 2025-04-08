@@ -1,9 +1,6 @@
 
 import { toast } from 'sonner';
 
-// The key is not directly exposed as plaintext in the codebase
-const OPENAI_KEY_TOKEN = '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';
-
 // Maximum number of API calls allowed per user session to prevent abuse
 const MAX_API_CALLS_PER_SESSION = 5;
 // Store API call count to limit usage per session
@@ -164,6 +161,13 @@ export const generateWorksheetWithAI = async (params: WorksheetParams): Promise<
     lastApiCallTime = now;
     apiCallCount++;
     
+    // Get API key from session storage
+    const apiKey = sessionStorage.getItem('openai_api_key');
+    
+    if (!apiKey) {
+      throw new Error("No API key found. Please provide an OpenAI API key in the settings.");
+    }
+    
     // Construct the sanitized prompt
     const prompt = buildPrompt(params);
     
@@ -172,7 +176,7 @@ export const generateWorksheetWithAI = async (params: WorksheetParams): Promise<
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_KEY_TOKEN}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
         model: 'gpt-4o',
@@ -191,7 +195,7 @@ export const generateWorksheetWithAI = async (params: WorksheetParams): Promise<
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error('Error generating worksheet. Please try again later.');
+      throw new Error(errorData.error?.message || `API error: ${response.status}`);
     }
     
     const data = await response.json();

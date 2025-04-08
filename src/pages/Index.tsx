@@ -6,10 +6,11 @@ import GenerationProgress from '@/components/GenerationProgress';
 import FeatureSection from '@/components/FeatureSection';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { FileText, ArrowUp, Zap, Database, ArrowLeft } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { FileText, ArrowUp, Zap, Database, ArrowLeft, Key } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
 
 const Index = () => {
   const {
@@ -20,7 +21,9 @@ const Index = () => {
     updateField,
     resetForm,
     generateWorksheet,
-    generationTime
+    generationTime,
+    openAIKey,
+    storeApiKey
   } = useFormData();
   
   // State to control which page is visible
@@ -33,6 +36,10 @@ const Index = () => {
   
   // State for generation modal
   const [showGenerationModal, setShowGenerationModal] = useState(false);
+  
+  // State for API key modal
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKeyInput, setApiKeyInput] = useState('');
   
   // State for worksheet view (student/teacher)
   const [worksheetView, setWorksheetView] = useState<WorksheetView>(WorksheetView.STUDENT);
@@ -75,6 +82,18 @@ const Index = () => {
       top: 0,
       behavior: 'smooth'
     });
+  };
+  
+  // Handle API key submission
+  const handleApiKeySubmit = () => {
+    if (!apiKeyInput || apiKeyInput.trim().length < 10) {
+      toast.error('Please enter a valid OpenAI API key');
+      return;
+    }
+    
+    storeApiKey(apiKeyInput.trim());
+    setShowApiKeyModal(false);
+    toast.success('API key saved successfully');
   };
 
   return (
@@ -120,6 +139,35 @@ const Index = () => {
         <main className="max-w-screen-xl mx-auto">
           {currentPage === 1 && (
             <div className="w-full">
+              {/* API Key banner */}
+              {!openAIKey && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-md">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <Key className="h-5 w-5 text-yellow-400" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-yellow-700">
+                        <span className="font-medium">OpenAI API Key Required</span>
+                      </p>
+                      <p className="mt-1 text-sm text-yellow-600">
+                        You need to provide an OpenAI API key to generate worksheets with AI. Without a key, mock data will be used instead.
+                      </p>
+                      <div className="mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setShowApiKeyModal(true)}
+                          className="text-xs border-yellow-400 text-yellow-700 hover:bg-yellow-50"
+                        >
+                          Add API Key
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <WorksheetForm
                 formData={formData}
                 updateField={updateField}
@@ -180,6 +228,36 @@ const Index = () => {
               currentTime={generationTime}
             />
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* API Key Modal */}
+      <Dialog open={showApiKeyModal} onOpenChange={setShowApiKeyModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter your OpenAI API Key</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 mb-4">
+              Your API key will be stored in your browser session only and will not be sent to our servers.
+              It will be used to generate worksheets using OpenAI's API.
+            </p>
+            <Input
+              type="password"
+              placeholder="sk-..."
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowApiKeyModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleApiKeySubmit}>
+              Save API Key
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
