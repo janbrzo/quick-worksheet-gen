@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Exercise, WorksheetView } from '@/types/worksheet';
-import { Book, FileText, Edit, CheckSquare, List, Lightbulb, Clock } from 'lucide-react';
+import { Book, FileText, Edit, CheckSquare, List, Lightbulb, Clock, MessageCircle, Sparkles } from 'lucide-react';
 
 interface WorksheetContentProps {
   content: string;
@@ -26,12 +26,11 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({ content, exercises,
   return (
     <div>
       {/* Compact title and overview section */}
-      <div className="bg-gray-50 p-3 rounded-md border-l-4 border-edu-primary mb-4">
+      <div className="bg-gradient-to-r from-indigo-100 to-purple-100 p-5 rounded-md border-l-4 border-edu-primary mb-6">
         <h1 className="text-xl font-bold text-edu-dark">{title}</h1>
-      </div>
-      
-      <div className="mb-4">
-        {renderMarkdown(filteredContent)}
+        <div className="mt-3 text-edu-dark/80">
+          {renderMarkdown(filteredContent)}
+        </div>
       </div>
       
       {exercises.map((exercise, index) => (
@@ -74,43 +73,60 @@ const renderExerciseContent = (exercise: Exercise, index: number, viewMode: Work
   // Determine if we should show answers based on view mode
   const showAnswers = viewMode === WorksheetView.TEACHER && exercise.teacherAnswers;
   
+  // Different colors for different exercise types
+  const exerciseColors = {
+    reading: 'from-blue-500 to-blue-600',
+    vocabulary: 'from-green-500 to-green-600',
+    writing: 'from-purple-500 to-purple-600',
+    grammar: 'from-amber-500 to-amber-600',
+    listening: 'from-rose-500 to-rose-600',
+    speaking: 'from-cyan-500 to-cyan-600',
+    default: 'from-indigo-500 to-violet-600'
+  };
+  
+  const exerciseColor = exerciseColors[exercise.type] || exerciseColors.default;
+  
   return (
-    <div key={index} className={`my-6 pb-6 border-b border-gray-200 ${
-      index % 2 === 0 ? 'bg-edu-light bg-opacity-20 p-4 rounded-lg' : ''
-    }`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-md bg-edu-primary text-white">
-            {getExerciseIcon(exercise.type)}
+    <div key={index} className="my-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      <div className={`bg-gradient-to-r ${exerciseColor} p-4 text-white`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-md">
+              {getExerciseIcon(exercise.type)}
+            </div>
+            <h3 className="font-bold text-lg">{exercise.title}</h3>
           </div>
-          <h3 className="font-bold text-lg text-edu-primary">{exercise.title}</h3>
+          
+          {exercise.duration && (
+            <div className="flex items-center text-white bg-white/20 px-3 py-1.5 rounded-full text-sm">
+              <Clock size={14} className="mr-1" />
+              <span className="font-medium">{exercise.duration} min</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-5">
+        <div className="italic mb-5 pl-3 border-l-4 border-gray-300 py-2 bg-gray-50 rounded-r-md">
+          {exercise.instructions}
         </div>
         
-        {exercise.duration && (
-          <div className="flex items-center text-gray-600 bg-gray-100 px-2 py-1 rounded">
-            <Clock size={14} className="mr-1" />
-            <span className="text-xs font-medium">{exercise.duration} min</span>
+        <div className={showAnswers ? 'mb-4' : ''}>
+          {renderExerciseLayout(exercise)}
+        </div>
+        
+        {viewMode === WorksheetView.TEACHER && exercise.teacherAnswers && (
+          <div className="mt-5 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+            <div className="flex items-center gap-2 text-blue-700 font-medium mb-2">
+              <Lightbulb size={18} />
+              Teacher Tips
+            </div>
+            <div className="text-sm text-blue-900">
+              {renderMarkdown(exercise.teacherAnswers)}
+            </div>
           </div>
         )}
       </div>
-      
-      <div className="italic mb-4 pl-2 border-l-4 border-edu-accent py-1">{exercise.instructions}</div>
-      
-      <div className={showAnswers ? 'mb-4' : ''}>
-        {renderExerciseLayout(exercise)}
-      </div>
-      
-      {viewMode === WorksheetView.TEACHER && exercise.teacherAnswers && (
-        <div className="mt-4 bg-edu-light bg-opacity-40 p-3 rounded-lg border-l-4 border-edu-secondary">
-          <div className="flex items-center gap-2 text-edu-secondary font-medium mb-2">
-            <Lightbulb size={18} />
-            Teacher Tips
-          </div>
-          <div className="text-sm">
-            {renderMarkdown(exercise.teacherAnswers)}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -118,17 +134,19 @@ const renderExerciseContent = (exercise: Exercise, index: number, viewMode: Work
 const getExerciseIcon = (type: Exercise['type']) => {
   switch (type) {
     case 'vocabulary':
-      return <Book size={16} />;
+      return <Book size={18} className="text-white" />;
     case 'reading':
-      return <FileText size={16} />;
+      return <FileText size={18} className="text-white" />;
     case 'writing':
-      return <Edit size={16} />;
+      return <Edit size={18} className="text-white" />;
     case 'grammar':
-      return <CheckSquare size={16} />;
+      return <CheckSquare size={18} className="text-white" />;
     case 'listening':
-      return <List size={16} />;
+      return <List size={18} className="text-white" />;
+    case 'speaking':
+      return <MessageCircle size={18} className="text-white" />;
     default:
-      return <FileText size={16} />;
+      return <Sparkles size={18} className="text-white" />;
   }
 };
 
@@ -161,10 +179,10 @@ const renderVocabularyExercise = (content: string) => {
           const [_, term, definition, context] = matches;
           
           return (
-            <div key={i} className="border border-gray-200 rounded-md p-3 hover:bg-gray-50 transition-colors">
-              <div className="font-bold text-edu-primary">{term}</div>
-              <div className="text-sm mt-1">{definition}</div>
-              <div className="text-xs text-gray-500 mt-1">Context: {context}</div>
+            <div key={i} className="border border-gray-200 rounded-md p-4 hover:bg-gray-50 transition-colors hover:border-indigo-200 shadow-sm">
+              <div className="font-bold text-indigo-600">{term}</div>
+              <div className="text-sm mt-2">{definition}</div>
+              <div className="text-xs text-gray-500 mt-2 italic">Context: {context}</div>
             </div>
           );
         })}
@@ -180,14 +198,14 @@ const renderGrammarExercise = (content: string) => {
   
   return (
     <div>
-      {title && <h4 className="font-medium mb-3">{title.replace('## ', '')}</h4>}
-      <div className="space-y-3">
+      {title && <h4 className="font-medium mb-4">{title.replace('## ', '')}</h4>}
+      <div className="space-y-4">
         {items.map((item, i) => {
           const content = item.replace(/^\d+\. /, '');
           
           return (
-            <div key={i} className="flex items-center gap-2">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-edu-primary text-white flex items-center justify-center text-sm font-medium">
+            <div key={i} className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-center text-sm font-medium">
                 {i + 1}
               </span>
               <div className="flex-1 border-b border-dashed border-gray-300 pb-1">
@@ -211,18 +229,18 @@ const renderReadingExercise = (content: string) => {
   
   return (
     <div>
-      <div className="border-l-4 border-edu-primary pl-4 mb-4">
+      <div className="bg-blue-50 p-5 mb-6 rounded-lg border-l-4 border-blue-400 leading-relaxed">
         {renderMarkdown(readingText)}
       </div>
       
-      <h4 className="font-medium mb-3">Comprehension Questions</h4>
-      <div className="space-y-2">
+      <h4 className="font-semibold text-lg mb-4 text-blue-700">Comprehension Questions</h4>
+      <div className="space-y-3 pl-2">
         {questions.split('\n')
           .filter(line => line.match(/^\d+\. /))
           .map((question, i) => (
-            <div key={i} className="flex gap-2">
-              <span className="font-bold text-edu-primary">{i + 1}.</span>
-              <div>{question.replace(/^\d+\. /, '')}</div>
+            <div key={i} className="flex gap-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
+              <span className="font-bold text-blue-600 w-6 text-center">{i + 1}.</span>
+              <div className="flex-1">{question.replace(/^\d+\. /, '')}</div>
             </div>
           ))}
       </div>
@@ -235,26 +253,26 @@ const renderVocabularySection = (vocabItems: any[], viewMode: WorksheetView) => 
   const itemsPerColumn = Math.ceil(vocabItems.length / 3);
   
   return (
-    <div className="mt-8 pt-6 border-t-2 border-edu-primary">
+    <div className="mt-10 pt-6 border-t-2 border-edu-primary">
       <h2 className="text-xl font-bold mb-4 text-edu-dark flex items-center gap-2">
         <Book size={20} />
         Vocabulary Reference Sheet
       </h2>
-      <p className="text-sm text-gray-600 mb-4">
+      <p className="text-sm text-gray-600 mb-5">
         This vocabulary reference contains key terms used throughout the worksheet. Students can refer to it during exercises or use it for revision.
       </p>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 bg-gradient-to-br from-gray-50 to-indigo-50 p-5 rounded-lg">
         {Array.from({ length: 3 }).map((_, colIndex) => (
-          <div key={colIndex} className="space-y-3">
+          <div key={colIndex} className="space-y-4">
             {vocabItems
               .slice(colIndex * itemsPerColumn, (colIndex + 1) * itemsPerColumn)
               .map((item, i) => (
-                <div key={i} className="border-b border-gray-200 pb-2">
-                  <div className="font-bold text-edu-primary">{item.term}</div>
-                  <div className="text-sm">{item.definition}</div>
+                <div key={i} className="border-b border-gray-200 pb-3 hover:bg-white hover:shadow-sm p-2 rounded-md transition-all">
+                  <div className="font-bold text-indigo-600">{item.term}</div>
+                  <div className="text-sm mt-1">{item.definition}</div>
                   {item.example && viewMode === WorksheetView.TEACHER && (
-                    <div className="text-xs text-gray-600 italic mt-1">Example: {item.example}</div>
+                    <div className="text-xs text-gray-600 italic mt-2 bg-gray-50 p-2 rounded">Example: {item.example}</div>
                   )}
                 </div>
               ))}

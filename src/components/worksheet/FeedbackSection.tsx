@@ -1,40 +1,47 @@
 
 import React from 'react';
-import { Star } from 'lucide-react';
 import { FeedbackData } from '@/types/worksheet';
+import { Star } from 'lucide-react';
 
 interface FeedbackSectionProps {
   feedbackData: FeedbackData;
   handleRateWorksheet: (rating: number) => void;
 }
 
-const FeedbackSection: React.FC<FeedbackSectionProps> = ({ 
-  feedbackData, 
-  handleRateWorksheet 
+const FeedbackSection: React.FC<FeedbackSectionProps> = ({
+  feedbackData,
+  handleRateWorksheet
 }) => {
   return (
-    <div className="border-t border-gray-200 pt-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <p className="text-sm text-gray-500 italic">
-          This is a general worksheet created based on your input. 
-          Provide more specific details to get more personalized materials tailored to your students.
-        </p>
-        
-        <div className="flex items-center gap-1">
-          <span className="text-sm text-gray-700 mr-2">Rate this worksheet:</span>
-          {[1, 2, 3, 4, 5].map((rating) => (
-            <button 
-              key={rating}
-              onClick={() => handleRateWorksheet(rating)}
-              className={`text-gray-400 hover:text-yellow-400 focus:outline-none transition-colors ${
-                rating <= feedbackData.rating ? 'text-yellow-400' : ''
-              }`}
-            >
-              <Star size={20} className="fill-current" />
-            </button>
-          ))}
-        </div>
+    <div className="mt-8 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl text-center border border-indigo-100">
+      <h4 className="text-lg font-bold text-indigo-900 mb-3">How would you rate this worksheet?</h4>
+      <p className="text-sm text-indigo-700 mb-4">Your feedback helps us improve our AI-generated worksheets</p>
+      
+      <div className="flex justify-center mb-2">
+        {[1, 2, 3, 4, 5].map((rating) => (
+          <button 
+            key={rating}
+            onClick={() => handleRateWorksheet(rating)}
+            className={`mx-1 hover:scale-110 focus:outline-none transition-transform ${
+              rating <= feedbackData.rating ? 'text-yellow-400' : 'text-gray-300'
+            }`}
+          >
+            <Star 
+              size={32} 
+              className={`${rating <= feedbackData.rating ? 'fill-yellow-400 stroke-yellow-500' : 'fill-transparent stroke-gray-300'}`}
+              strokeWidth={1.5}
+            />
+          </button>
+        ))}
       </div>
+      
+      {feedbackData.rating > 0 && (
+        <p className="text-sm font-medium text-indigo-700">
+          {feedbackData.rating < 3 
+            ? "We're sorry this worksheet didn't meet your expectations."
+            : "Thank you for your positive feedback!"}
+        </p>
+      )}
     </div>
   );
 };
