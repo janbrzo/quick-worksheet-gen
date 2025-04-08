@@ -59,3 +59,12 @@ export interface FeedbackData {
   rating: number;
   comment: string;
 }
+
+// Add the missing TileSelectorProps interface
+export interface TileSelectorProps {
+  tiles: string[];
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}
