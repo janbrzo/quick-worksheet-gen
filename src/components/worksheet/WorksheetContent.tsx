@@ -1,284 +1,286 @@
 
 import React from 'react';
-import { Exercise, WorksheetView } from '@/types/worksheet';
-import { Book, FileText, Edit, CheckSquare, List, Lightbulb, Clock, MessageCircle, Sparkles } from 'lucide-react';
+import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
+import { 
+  BookOpen, 
+  Link, 
+  PenTool, 
+  MessageCircle, 
+  CheckSquare, 
+  MessageSquare,
+  Clock
+} from 'lucide-react';
 
 interface WorksheetContentProps {
   content: string;
   exercises: Exercise[];
-  vocabulary: any[];
+  vocabulary: VocabularyItem[];
   viewMode: WorksheetView;
   isEditing: boolean;
+  subtitle?: string;
+  introduction?: string;
 }
 
-const WorksheetContent: React.FC<WorksheetContentProps> = ({ content, exercises, vocabulary, viewMode, isEditing }) => {
-  if (isEditing) {
-    return null; // Editing UI is handled by the parent component
-  }
-
-  // Extract title and overview from content
-  const contentLines = content.split('\n');
-  const title = contentLines.find(line => line.startsWith('# '))?.replace('# ', '') || '';
-  
-  // Remove title from content for separate rendering
-  const filteredContent = contentLines.filter(line => !line.startsWith('# ')).join('\n');
-
-  return (
-    <div>
-      {/* Compact title and overview section */}
-      <div className="bg-gradient-to-r from-indigo-100 to-purple-100 p-5 rounded-md border-l-4 border-edu-primary mb-6">
-        <h1 className="text-xl font-bold text-edu-dark">{title}</h1>
-        <div className="mt-3 text-edu-dark/80">
-          {renderMarkdown(filteredContent)}
-        </div>
-      </div>
-      
-      {exercises.map((exercise, index) => (
-        renderExerciseContent(exercise, index, viewMode)
-      ))}
-      
-      {renderVocabularySection(vocabulary, viewMode)}
-    </div>
-  );
-};
-
-const renderMarkdown = (text: string) => {
-  return text.split('\n').map((line, index) => {
-    if (line.startsWith('# ')) {
-      return <h1 key={index} className="text-2xl font-bold my-5 text-edu-dark">{line.replace('# ', '')}</h1>;
-    } else if (line.startsWith('## ')) {
-      return <h2 key={index} className="text-xl font-bold my-4 text-edu-primary">{line.replace('## ', '')}</h2>;
-    } else if (line.startsWith('### ')) {
-      return <h3 key={index} className="text-lg font-bold my-3 text-edu-secondary">{line.replace('### ', '')}</h3>;
-    } else if (line.startsWith('* ')) {
-      return <li key={index} className="ml-6 my-1 list-disc">{line.replace('* ', '')}</li>;
-    } else if (line.startsWith('- ')) {
-      return <li key={index} className="ml-6 my-1 list-disc">{line.replace('- ', '')}</li>;
-    } else if (line.startsWith('1. ') || line.startsWith('2. ') || line.startsWith('3. ') || 
-               line.startsWith('4. ') || line.startsWith('5. ') || line.startsWith('6. ') ||
-               line.startsWith('7. ') || line.startsWith('8. ') || line.startsWith('9. ') ||
-               line.startsWith('10. ')) {
-      return <div key={index} className="ml-6 my-1">{line}</div>;
-    } else if (line.trim() === '') {
-      return <br key={index} />;
-    } else if (line.startsWith('**') && line.endsWith('**')) {
-      return <p key={index} className="font-bold my-2">{line.replace(/^\*\*|\*\*$/g, '')}</p>;
-    } else {
-      return <p key={index} className="my-2">{line}</p>;
+const WorksheetContent: React.FC<WorksheetContentProps> = ({ 
+  content, 
+  exercises, 
+  vocabulary, 
+  viewMode,
+  isEditing,
+  subtitle,
+  introduction
+}) => {
+  // Function to get the appropriate icon for exercise type
+  const getExerciseIcon = (type: string) => {
+    switch (type) {
+      case 'reading':
+        return <BookOpen size={18} />;
+      case 'vocabulary':
+      case 'matching':
+        return <Link size={18} />;
+      case 'writing':
+      case 'fill-in-blanks':
+        return <PenTool size={18} />;
+      case 'speaking':
+      case 'dialogue':
+        return <MessageCircle size={18} />;
+      case 'grammar':
+      case 'multiple-choice':
+        return <CheckSquare size={18} />;
+      case 'discussion':
+        return <MessageSquare size={18} />;
+      default:
+        return <BookOpen size={18} />;
     }
-  });
-};
-
-const renderExerciseContent = (exercise: Exercise, index: number, viewMode: WorksheetView) => {
-  // Determine if we should show answers based on view mode
-  const showAnswers = viewMode === WorksheetView.TEACHER && exercise.teacherAnswers;
-  
-  // Different colors for different exercise types
-  const exerciseColors = {
-    reading: 'from-blue-500 to-blue-600',
-    vocabulary: 'from-green-500 to-green-600',
-    writing: 'from-purple-500 to-purple-600',
-    grammar: 'from-amber-500 to-amber-600',
-    listening: 'from-rose-500 to-rose-600',
-    speaking: 'from-cyan-500 to-cyan-600',
-    default: 'from-indigo-500 to-violet-600'
   };
-  
-  const exerciseColor = exerciseColors[exercise.type] || exerciseColors.default;
-  
-  return (
-    <div key={index} className="my-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <div className={`bg-gradient-to-r ${exerciseColor} p-4 text-white`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-md">
-              {getExerciseIcon(exercise.type)}
-            </div>
-            <h3 className="font-bold text-lg">{exercise.title}</h3>
+
+  // Helper function to render content with proper HTML formatting
+  const renderHTML = (html: string) => {
+    return { __html: html };
+  };
+
+  // Helper to render different exercise types
+  const renderExerciseContent = (exercise: Exercise) => {
+    const { type } = exercise;
+    
+    switch (type) {
+      case 'reading':
+        return (
+          <div>
+            {exercise.content && (
+              <div 
+                className="bg-slate-50 p-4 rounded-lg mb-4 text-gray-800 leading-relaxed"
+                dangerouslySetInnerHTML={renderHTML(exercise.content)}
+              />
+            )}
+            {exercise.questions && (
+              <ol className="list-decimal pl-5 space-y-2">
+                {exercise.questions.map((question, idx) => (
+                  <li key={idx} className="pl-1 py-1">
+                    {question.text}
+                    {viewMode === WorksheetView.TEACHER && question.answer && (
+                      <span className="ml-2 text-emerald-600 font-medium">
+                        Answer: {question.answer}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
-          
-          {exercise.duration && (
-            <div className="flex items-center text-white bg-white/20 px-3 py-1.5 rounded-full text-sm">
-              <Clock size={14} className="mr-1" />
-              <span className="font-medium">{exercise.duration} min</span>
-            </div>
-          )}
-        </div>
-      </div>
+        );
       
-      <div className="p-5">
-        <div className="italic mb-5 pl-3 border-l-4 border-gray-300 py-2 bg-gray-50 rounded-r-md">
-          {exercise.instructions}
-        </div>
-        
-        <div className={showAnswers ? 'mb-4' : ''}>
-          {renderExerciseLayout(exercise)}
-        </div>
-        
-        {viewMode === WorksheetView.TEACHER && exercise.teacherAnswers && (
-          <div className="mt-5 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-            <div className="flex items-center gap-2 text-blue-700 font-medium mb-2">
-              <Lightbulb size={18} />
-              Teacher Tips
-            </div>
-            <div className="text-sm text-blue-900">
-              {renderMarkdown(exercise.teacherAnswers)}
-            </div>
+      case 'matching':
+      case 'vocabulary':
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {exercise.items && exercise.items.map((item, idx) => (
+              <div key={idx} className="flex items-center p-2 border border-gray-200 bg-slate-50 rounded-md">
+                <div className="font-semibold min-w-[100px] text-indigo-700">
+                  {item.term}
+                </div>
+                <div className="flex-grow pl-3 border-l border-gray-200">
+                  {item.definition}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const getExerciseIcon = (type: Exercise['type']) => {
-  switch (type) {
-    case 'vocabulary':
-      return <Book size={18} className="text-white" />;
-    case 'reading':
-      return <FileText size={18} className="text-white" />;
-    case 'writing':
-      return <Edit size={18} className="text-white" />;
-    case 'grammar':
-      return <CheckSquare size={18} className="text-white" />;
-    case 'listening':
-      return <List size={18} className="text-white" />;
-    case 'speaking':
-      return <MessageCircle size={18} className="text-white" />;
-    default:
-      return <Sparkles size={18} className="text-white" />;
-  }
-};
-
-const renderExerciseLayout = (exercise: Exercise) => {
-  switch (exercise.type) {
-    case 'vocabulary':
-      return renderVocabularyExercise(exercise.content);
-    case 'grammar':
-      return renderGrammarExercise(exercise.content);
-    case 'reading':
-      return renderReadingExercise(exercise.content);
-    default:
-      return renderMarkdown(exercise.content);
-  }
-};
-
-const renderVocabularyExercise = (content: string) => {
-  const lines = content.split('\n');
-  const title = lines.find(line => line.startsWith('## '));
-  const items = lines.filter(line => line.match(/^\d+\. \*\*/));
-  
-  return (
-    <div>
-      {title && <h4 className="font-medium mb-3">{title.replace('## ', '')}</h4>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {items.map((item, i) => {
-          const matches = item.match(/^\d+\. \*\*(.+?)\*\* - (.+?) \(related to (.+?)\)/);
-          if (!matches) return null;
-          
-          const [_, term, definition, context] = matches;
-          
-          return (
-            <div key={i} className="border border-gray-200 rounded-md p-4 hover:bg-gray-50 transition-colors hover:border-indigo-200 shadow-sm">
-              <div className="font-bold text-indigo-600">{term}</div>
-              <div className="text-sm mt-2">{definition}</div>
-              <div className="text-xs text-gray-500 mt-2 italic">Context: {context}</div>
+        );
+      
+      case 'fill-in-blanks':
+        return (
+          <div>
+            {exercise.word_bank && (
+              <div className="flex flex-wrap gap-2 mb-4 p-3 bg-slate-100 rounded-lg">
+                {exercise.word_bank.map((word, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-white border border-gray-200 rounded-md text-indigo-700">
+                    {word}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            {exercise.sentences && (
+              <ol className="list-decimal pl-5 space-y-3">
+                {exercise.sentences.map((sentence, idx) => (
+                  <li key={idx} className="pl-1">
+                    <span dangerouslySetInnerHTML={renderHTML(sentence.text)} />
+                    {viewMode === WorksheetView.TEACHER && sentence.answer && (
+                      <span className="ml-2 text-emerald-600 font-medium">
+                        Answer: {sentence.answer}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        );
+      
+      case 'multiple-choice':
+        return (
+          <div className="space-y-6">
+            {exercise.questions && exercise.questions.map((question, qIdx) => (
+              <div key={qIdx} className="mb-4">
+                <p className="font-medium mb-2">{qIdx + 1}. {question.text}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4">
+                  {question.options && question.options.map((option, oIdx) => (
+                    <div 
+                      key={oIdx} 
+                      className={`p-2 border rounded-md flex items-center gap-2 ${option.correct && viewMode === WorksheetView.TEACHER ? 'border-emerald-300 bg-emerald-50' : 'border-gray-200'}`}
+                    >
+                      <div className={`w-5 h-5 flex-shrink-0 rounded border ${option.correct && viewMode === WorksheetView.TEACHER ? 'border-emerald-500 bg-emerald-100 text-emerald-700' : 'border-gray-400'} flex items-center justify-center text-xs`}>
+                        {option.correct && viewMode === WorksheetView.TEACHER ? "✓" : option.label}
+                      </div>
+                      <span className="text-sm">{option.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 'dialogue':
+        return (
+          <div>
+            <div className="bg-slate-50 p-4 rounded-lg mb-4">
+              {exercise.dialogue && exercise.dialogue.map((line, idx) => (
+                <p key={idx} className="mb-2">
+                  <span className="font-semibold text-indigo-700">{line.speaker}:</span> {line.text}
+                </p>
+              ))}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+            
+            {exercise.expressions && (
+              <div>
+                <p className="font-medium my-3">{exercise.expression_instruction || "Practice using these expressions:"}</p>
+                <div className="flex flex-wrap gap-2">
+                  {exercise.expressions.map((expression, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-slate-100 border border-gray-200 rounded-md">
+                      {expression}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      
+      case 'discussion':
+        return (
+          <ul className="list-none space-y-2">
+            {exercise.questions && exercise.questions.map((question, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <span className="text-indigo-600 font-bold mt-1">→</span>
+                <span>{question}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      
+      default:
+        return (
+          <div dangerouslySetInnerHTML={renderHTML(exercise.content)} />
+        );
+    }
+  };
 
-const renderGrammarExercise = (content: string) => {
-  const lines = content.split('\n');
-  const title = lines.find(line => line.startsWith('## '));
-  const items = lines.filter(line => line.match(/^\d+\. /));
-  
   return (
-    <div>
-      {title && <h4 className="font-medium mb-4">{title.replace('## ', '')}</h4>}
-      <div className="space-y-4">
-        {items.map((item, i) => {
-          const content = item.replace(/^\d+\. /, '');
-          
-          return (
-            <div key={i} className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-center text-sm font-medium">
-                {i + 1}
-              </span>
-              <div className="flex-1 border-b border-dashed border-gray-300 pb-1">
-                {content}
+    <div className="space-y-6">
+      {/* Introduction section */}
+      {(subtitle || introduction) && (
+        <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-md mb-6">
+          {subtitle && <h2 className="text-amber-800 font-medium mb-2">{subtitle}</h2>}
+          {introduction && <p className="text-amber-700">{introduction}</p>}
+        </div>
+      )}
+      
+      {/* Only show main content if it's not already in the introduction */}
+      {!introduction && content && (
+        <div className="mb-6">
+          <p className="text-gray-700 leading-relaxed">{content}</p>
+        </div>
+      )}
+      
+      {/* Exercises */}
+      <div className="space-y-8">
+        {exercises.map((exercise, index) => (
+          <div key={index} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-full">
+                  {getExerciseIcon(exercise.type)}
+                </div>
+                <h3 className="font-bold">{exercise.title}</h3>
+              </div>
+              <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-full text-xs font-medium">
+                <Clock size={14} />
+                <span>{exercise.duration || exercise.time || 5} min</span>
               </div>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const renderReadingExercise = (content: string) => {
-  const sections = content.split('## Comprehension Questions');
-  
-  if (sections.length < 2) return renderMarkdown(content);
-  
-  const readingText = sections[0];
-  const questions = sections[1];
-  
-  return (
-    <div>
-      <div className="bg-blue-50 p-5 mb-6 rounded-lg border-l-4 border-blue-400 leading-relaxed">
-        {renderMarkdown(readingText)}
-      </div>
-      
-      <h4 className="font-semibold text-lg mb-4 text-blue-700">Comprehension Questions</h4>
-      <div className="space-y-3 pl-2">
-        {questions.split('\n')
-          .filter(line => line.match(/^\d+\. /))
-          .map((question, i) => (
-            <div key={i} className="flex gap-3 p-2 hover:bg-gray-50 rounded-md transition-colors">
-              <span className="font-bold text-blue-600 w-6 text-center">{i + 1}.</span>
-              <div className="flex-1">{question.replace(/^\d+\. /, '')}</div>
-            </div>
-          ))}
-      </div>
-    </div>
-  );
-};
-
-const renderVocabularySection = (vocabItems: any[], viewMode: WorksheetView) => {
-  // Group vocabulary items into columns
-  const itemsPerColumn = Math.ceil(vocabItems.length / 3);
-  
-  return (
-    <div className="mt-10 pt-6 border-t-2 border-edu-primary">
-      <h2 className="text-xl font-bold mb-4 text-edu-dark flex items-center gap-2">
-        <Book size={20} />
-        Vocabulary Reference Sheet
-      </h2>
-      <p className="text-sm text-gray-600 mb-5">
-        This vocabulary reference contains key terms used throughout the worksheet. Students can refer to it during exercises or use it for revision.
-      </p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 bg-gradient-to-br from-gray-50 to-indigo-50 p-5 rounded-lg">
-        {Array.from({ length: 3 }).map((_, colIndex) => (
-          <div key={colIndex} className="space-y-4">
-            {vocabItems
-              .slice(colIndex * itemsPerColumn, (colIndex + 1) * itemsPerColumn)
-              .map((item, i) => (
-                <div key={i} className="border-b border-gray-200 pb-3 hover:bg-white hover:shadow-sm p-2 rounded-md transition-all">
-                  <div className="font-bold text-indigo-600">{item.term}</div>
-                  <div className="text-sm mt-1">{item.definition}</div>
-                  {item.example && viewMode === WorksheetView.TEACHER && (
-                    <div className="text-xs text-gray-600 italic mt-2 bg-gray-50 p-2 rounded">Example: {item.example}</div>
-                  )}
+            
+            <div className="p-4">
+              <p className="mb-4 font-medium text-gray-700">{exercise.instructions}</p>
+              
+              {/* Render different exercise content based on type */}
+              {renderExerciseContent(exercise)}
+              
+              {/* Teacher view only content */}
+              {viewMode === WorksheetView.TEACHER && exercise.teacher_tip && (
+                <div className="mt-6 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
+                  <h4 className="text-blue-800 font-medium flex items-center gap-2 mb-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8 2a.5.5 0 0 1 .5.5v.5h1a.5.5 0 0 1 .5.5v.5a.5.5 0 0 1-.5.5h-1v.5a.5.5 0 0 1-1 0v-.5h-1a.5.5 0 0 1-.5-.5v-.5a.5.5 0 0 1 .5-.5h1v-.5A.5.5 0 0 1 8 2Z"/>
+                      <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0ZM4 1h5v1.5a.5.5 0 0 0 .5.5H13v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1Z"/>
+                    </svg>
+                    Teacher Tip
+                  </h4>
+                  <p className="text-blue-800 text-sm">{exercise.teacher_tip}</p>
                 </div>
-              ))}
+              )}
+            </div>
           </div>
         ))}
       </div>
+      
+      {/* Vocabulary section */}
+      {vocabulary && vocabulary.length > 0 && (
+        <div className="mt-8 pt-6 border-t-2 border-gray-200">
+          <h3 className="text-xl font-bold text-center text-indigo-700 mb-4">Vocabulary Reference</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {vocabulary.map((item, index) => (
+              <div key={index} className="border border-gray-200 rounded-lg p-3 hover:border-indigo-300 transition-colors">
+                <div className="font-semibold text-indigo-700 mb-1">{item.term}</div>
+                <div className="text-gray-700 text-sm">{item.definition}</div>
+                {item.example && (
+                  <div className="text-gray-500 text-xs mt-1 italic">"{item.example}"</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

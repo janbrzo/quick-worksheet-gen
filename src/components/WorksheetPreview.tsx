@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
@@ -180,6 +179,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               vocabulary={data.vocabulary || []}
               viewMode={viewMode}
               isEditing={false}
+              subtitle={data.subtitle}
+              introduction={data.introduction}
             />
           ) : (
             <WorksheetEditor

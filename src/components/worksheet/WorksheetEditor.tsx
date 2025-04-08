@@ -10,6 +10,10 @@ interface WorksheetEditorProps {
   viewMode: WorksheetView;
   onContentChange: (content: string) => void;
   onExerciseChange: (index: number, field: keyof Exercise, value: string) => void;
+  subtitle?: string;
+  introduction?: string;
+  onSubtitleChange?: (subtitle: string) => void;
+  onIntroductionChange?: (introduction: string) => void;
 }
 
 const WorksheetEditor: React.FC<WorksheetEditorProps> = ({ 
@@ -17,7 +21,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
   exercises, 
   viewMode,
   onContentChange,
-  onExerciseChange
+  onExerciseChange,
+  subtitle,
+  introduction,
+  onSubtitleChange,
+  onIntroductionChange
 }) => {
   return (
     <div className="space-y-6">
@@ -30,6 +38,38 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           <p className="text-sm">Make your changes and click "Save Changes" when done. All modifications will be included in the downloaded PDF.</p>
         </div>
       </div>
+      
+      {/* Subtitle and Introduction section (if available) */}
+      {(subtitle !== undefined || introduction !== undefined) && (
+        <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:border-amber-300 focus-within:border-amber-400 transition-colors space-y-4">
+          {subtitle !== undefined && onSubtitleChange && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Subtitle <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>
+              </label>
+              <input 
+                type="text"
+                value={subtitle}
+                onChange={(e) => onSubtitleChange(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-amber-400 focus:ring-amber-300"
+              />
+            </div>
+          )}
+          
+          {introduction !== undefined && onIntroductionChange && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Introduction <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>
+              </label>
+              <Textarea 
+                value={introduction}
+                onChange={(e) => onIntroductionChange(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md min-h-[100px] focus:border-amber-400 focus:ring-amber-300"
+              />
+            </div>
+          )}
+        </div>
+      )}
       
       <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:border-amber-300 focus-within:border-amber-400 transition-colors">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -68,7 +108,7 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
             </div>
             <div className="ml-2 flex items-center text-gray-600 bg-gray-100 px-3 py-1.5 rounded">
               <Clock size={14} className="mr-1" />
-              <span className="text-xs font-medium">{exercise.duration || 10} min</span>
+              <span className="text-xs font-medium">{exercise.duration || exercise.time || 10} min</span>
             </div>
           </div>
           
@@ -103,7 +143,7 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
                 <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
               </label>
               <Textarea
-                value={exercise.teacherAnswers || ''}
+                value={exercise.teacherAnswers || exercise.teacher_tip || ''}
                 onChange={(e) => onExerciseChange(index, 'teacherAnswers', e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-md min-h-[150px] focus:border-amber-400 focus:ring-amber-300 bg-amber-50/30"
               />
