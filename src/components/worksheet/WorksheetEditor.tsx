@@ -31,12 +31,14 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
         </div>
       </div>
       
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Overview</label>
+      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:border-amber-300 focus-within:border-amber-400 transition-colors">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Overview <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>
+        </label>
         <Textarea 
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-md min-h-[150px]"
+          className="w-full p-3 border border-gray-300 rounded-md min-h-[150px] focus:border-amber-400 focus:ring-amber-300"
         />
       </div>
       
@@ -46,15 +48,17 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
       </h3>
       
       {exercises.map((exercise, index) => (
-        <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
+        <div key={index} className="space-y-3 p-4 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md hover:border-amber-300 transition-all">
           <div className="flex justify-between items-start">
             <div className="flex-grow">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
+              </label>
               <input
                 type="text"
                 value={exercise.title}
                 onChange={(e) => onExerciseChange(index, 'title', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md"
+                className="w-full p-2 border border-gray-300 rounded-md focus:border-amber-400 focus:ring-amber-300 bg-amber-50/30"
               />
             </div>
             <div className="ml-2 flex items-center text-gray-600 bg-gray-100 px-2 py-1 rounded">
@@ -64,33 +68,38 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Instructions <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
+            </label>
             <input
               type="text"
               value={exercise.instructions}
               onChange={(e) => onExerciseChange(index, 'instructions', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 rounded-md focus:border-amber-400 focus:ring-amber-300 bg-amber-50/30"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Content <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
+            </label>
             <Textarea
               value={exercise.content}
               onChange={(e) => onExerciseChange(index, 'content', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
+              className="w-full p-2 border border-gray-300 rounded-md min-h-[100px] focus:border-amber-400 focus:ring-amber-300 bg-amber-50/30"
             />
           </div>
           
           {viewMode === WorksheetView.TEACHER && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teacher Tips <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Only visible in Teacher view</span>
+                Teacher Tips <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded mr-1">Only visible in Teacher view</span>
+                <span className="text-amber-600 text-xs font-normal">(Editable)</span>
               </label>
               <Textarea
                 value={exercise.teacherAnswers || ''}
                 onChange={(e) => onExerciseChange(index, 'teacherAnswers', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md min-h-[100px]"
+                className="w-full p-2 border border-gray-300 rounded-md min-h-[100px] focus:border-amber-400 focus:ring-amber-300 bg-amber-50/30"
               />
             </div>
           )}
