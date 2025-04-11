@@ -259,9 +259,9 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
     }
   };
 
-  // Filter out any interactive quiz exercise types
+  // Filter out any exercises that should not be displayed
   const filteredExercises = exercises.filter(exercise => 
-    exercise.type !== 'interactive-quiz' && exercise.type !== 'quiz'
+    !['interactive-quiz', 'quiz'].includes(exercise.type as string)
   );
 
   return (
