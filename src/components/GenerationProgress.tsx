@@ -26,11 +26,22 @@ const GenerationProgress: React.FC<GenerationProgressProps> = ({
   const totalSteps = steps.length || 1;
   const stepsProgress = Math.round((completedSteps / totalSteps) * 100);
   
-  // Effect for updating active step based on completed steps
+  // Effect for animating through steps
   useEffect(() => {
     if (status === GenerationStatus.GENERATING) {
-      // Set active step to the latest completed step
-      setActiveStep(Math.max(0, completedSteps - 1));
+      const stepInterval = setInterval(() => {
+        setActiveStep(prev => {
+          // Only move to the next step if there are more steps
+          if (prev < completedSteps - 1) {
+            return prev + 1;
+          }
+          return prev;
+        });
+      }, 1200); // Show each step for about 1.2 seconds
+      
+      return () => {
+        clearInterval(stepInterval);
+      };
     } else if (status === GenerationStatus.COMPLETED) {
       setActiveStep(steps.length - 1);
     }
@@ -90,21 +101,28 @@ const GenerationProgress: React.FC<GenerationProgressProps> = ({
         className="h-2 mb-4"
       />
       
-      {/* Display only the current active step */}
-      <div className="mt-4 bg-edu-light bg-opacity-50 p-3 rounded-md">
-        <div className="flex items-center">
-          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mr-3">
-            <Check className="h-3 w-3 text-white" />
+      <div className="space-y-2 mt-4">
+        {steps.map((step, index) => (
+          <div 
+            key={index} 
+            className={`flex items-center p-2 rounded-md transition-all duration-300 ${
+              index === activeStep && status === GenerationStatus.GENERATING
+                ? 'bg-edu-light bg-opacity-50'
+                : ''
+            }`}
+          >
+            {step.completed ? (
+              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center mr-3">
+                <Check className="h-3 w-3 text-white" />
+              </div>
+            ) : (
+              <div className="w-5 h-5 rounded-full border border-gray-300 mr-3"></div>
+            )}
+            <span className={step.completed ? 'text-gray-800' : 'text-gray-400'}>
+              {step.text}
+            </span>
           </div>
-          <span className="text-gray-800 font-medium">
-            {steps[activeStep]?.text || "Finalizing..."}
-          </span>
-        </div>
-      </div>
-      
-      {/* Display step progress count */}
-      <div className="mt-2 text-right text-sm text-gray-500">
-        Step {completedSteps} of {totalSteps}
+        ))}
       </div>
     </div>
   );

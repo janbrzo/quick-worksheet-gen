@@ -30,16 +30,6 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
   subtitle,
   introduction
 }) => {
-  // Function to shuffle an array (Fisher-Yates algorithm)
-  const shuffleArray = <T,>(array: T[]): T[] => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
-
   // Function to get the appropriate icon for exercise type
   const getExerciseIcon = (type: string) => {
     switch (type) {
@@ -103,65 +93,17 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       case 'matching':
       case 'vocabulary':
         return (
-          <div className="space-y-4 w-full">
-            {exercise.items && (() => {
-              // Create a shuffled array of definition items for student view
-              const definitions = exercise.items.map(item => ({
-                id: Math.random().toString(36).substring(2, 9),
-                definition: item.definition
-              }));
-              
-              // Show the items in order for teacher view or when editing
-              if (viewMode === WorksheetView.TEACHER || isEditing) {
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {exercise.items.map((item, idx) => (
-                      <div key={idx} className="flex items-center p-2 border border-gray-200 bg-slate-50 rounded-md">
-                        <div className="font-semibold min-w-[100px] text-indigo-700">
-                          {item.term}
-                        </div>
-                        <div className="flex-grow pl-3 border-l border-gray-200">
-                          {item.definition}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              } else {
-                // For student view, keep terms in order but shuffle definitions
-                const shuffledDefinitions = shuffleArray(definitions);
-                
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Terms column */}
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-center border-b pb-2 text-indigo-600">Terms</h4>
-                      {exercise.items.map((item, idx) => (
-                        <div key={idx} className="p-2 border border-gray-200 bg-slate-50 rounded-md">
-                          <div className="font-semibold text-indigo-700">
-                            {item.term}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Definitions column - now with multiple columns for better layout */}
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-center border-b pb-2 text-indigo-600">Definitions</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {shuffledDefinitions.map((item, idx) => (
-                          <div key={item.id} className="p-2 border border-gray-200 bg-slate-50 rounded-md">
-                            <div className="text-gray-700">
-                              {item.definition}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-            })()}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {exercise.items && exercise.items.map((item, idx) => (
+              <div key={idx} className="flex items-center p-2 border border-gray-200 bg-slate-50 rounded-md">
+                <div className="font-semibold min-w-[100px] text-indigo-700">
+                  {item.term}
+                </div>
+                <div className="flex-grow pl-3 border-l border-gray-200">
+                  {item.definition}
+                </div>
+              </div>
+            ))}
           </div>
         );
       
@@ -264,11 +206,6 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
     }
   };
 
-  // Filter out any interactive quiz exercise types
-  const filteredExercises = exercises.filter(exercise => 
-    !(exercise.type as string).includes("interactive-quiz") && !(exercise.type as string).includes("quiz")
-  );
-
   return (
     <div className="space-y-6">
       {/* Introduction section */}
@@ -288,7 +225,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       
       {/* Exercises */}
       <div className="space-y-8">
-        {filteredExercises.map((exercise, index) => (
+        {exercises.map((exercise, index) => (
           <div key={index} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 flex justify-between items-center">
               <div className="flex items-center gap-3">

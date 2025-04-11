@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { FormData, WorksheetData, GenerationStatus, GenerationStep, Exercise, VocabularyItem } from '../types/worksheet';
 import { toast } from 'sonner';
@@ -152,9 +151,8 @@ export const useFormData = () => {
     // Set generation status to generating
     setGenerationStatus(GenerationStatus.GENERATING);
     
-    // Set random processing time between 21-49 seconds
-    const processingTime = Math.floor(Math.random() * (49 - 21 + 1)) + 21;
-    const processingTimeMs = processingTime * 1000;
+    // Set minimum processing time (31-58 seconds)
+    const minProcessingTime = Math.floor(Math.random() * (58000 - 31000)) + 31000;
     
     // Create generation steps
     const steps = createGenerationSteps();
@@ -163,28 +161,21 @@ export const useFormData = () => {
     try {
       const startTime = Date.now();
       
-      // Animate steps one by one
+      // Animate steps
       const stepsAnimation = new Promise<void>(async resolve => {
-        const stepDuration = processingTimeMs / steps.length;
-        
         for (let i = 0; i < steps.length; i++) {
-          // Set only the current step as active, all previous as completed
+          // Calculate step duration to fit within the total processing time
+          const stepDuration = minProcessingTime / (steps.length + 2); // +2 for margin
+          await new Promise(r => setTimeout(r, stepDuration));
+          
           setGenerationSteps(prev => {
             const updated = [...prev];
-            // Mark all previous steps as completed
-            for (let j = 0; j < i; j++) {
-              updated[j].completed = true;
-            }
-            // Set current step as active
             updated[i].completed = true;
             return updated;
           });
           
           const currentTime = Math.round((Date.now() - startTime) / 1000);
           setGenerationTime(currentTime);
-          
-          // Wait before showing the next step
-          await new Promise(r => setTimeout(r, stepDuration));
         }
         resolve();
       });
@@ -227,7 +218,7 @@ export const useFormData = () => {
       
       // Wait for minimum processing time and steps animation
       await Promise.all([
-        new Promise(resolve => setTimeout(resolve, processingTimeMs)),
+        new Promise(resolve => setTimeout(resolve, minProcessingTime)),
         stepsAnimation
       ]);
       

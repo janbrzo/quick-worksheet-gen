@@ -33,20 +33,13 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     // Create PDF with single canvas approach (more reliable for complex layouts)
     const pdf = new jsPDF('p', 'mm', 'a4');
     
-    // Render the entire content as one image with optimized settings
+    // Render the entire content as one image
     const canvas = await html2canvas(contentRef.current, {
-      scale: 1.5, // Reduced from 2 to optimize file size
+      scale: 2, // Higher scale for better quality
       useCORS: true,
       logging: false,
       allowTaint: true,
-      backgroundColor: '#ffffff',
-      imageTimeout: 0, // Increased timeout for complex layouts
-      removeContainer: true, // Clean up temporary elements
-      onclone: (clonedDoc) => {
-        // Optional: optimize the clone - e.g., remove unnecessary elements
-        const nonEssentialElements = clonedDoc.querySelectorAll('.no-print');
-        nonEssentialElements.forEach((el) => el.remove());
-      }
+      backgroundColor: '#ffffff'
     });
 
     // PDF dimensions (A4)
@@ -89,13 +82,13 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
           0, 0, canvas.width, sourceHeight
         );
         
-        // Add this slice to the PDF with compression
-        const imgData = tempCanvas.toDataURL('image/jpeg', 0.85); // Use JPEG for smaller file size
+        // Add this slice to the PDF
+        const imgData = tempCanvas.toDataURL('image/png');
         const sliceHeight = (sourceHeight * contentWidth) / canvas.width;
         
         pdf.addImage(
           imgData,
-          'JPEG',
+          'PNG',
           margin, 
           margin,
           contentWidth, 
@@ -104,16 +97,13 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
       }
     }
     
-    // We're not adding a separate vocabulary page to avoid duplication
-    // since vocabulary is already included in the main content
+    // Add vocabulary on a separate page if available
+    if (vocabulary && vocabulary.length > 0) {
+      pdf.addPage();
+      addVocabularyPage(pdf, vocabulary);
+    }
     
-    // Save PDF with compression options
-    const pdfOptions = {
-      compress: true,
-      precision: 2,
-      userUnit: 1.0
-    };
-    
+    // Save PDF
     pdf.save(filename);
     return filename;
     
@@ -125,9 +115,72 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
 }
 
 /**
- * Function kept for compatibility but no longer used to avoid duplicate vocabulary
+ * Adds a vocabulary section to the PDF
  */
 function addVocabularyPage(pdf: jsPDF, vocabulary: any[]): void {
-  // This function is kept for compatibility but is no longer used
-  // to avoid duplicate vocabulary in the PDF
+  // PDF settings
+  const margin = 20;
+  const lineHeight = 8;
+  
+  // Add vocabulary title
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text("Vocabulary Reference Sheet", margin, margin + 10);
+  
+  // Add vocabulary items
+  pdf.setFontSize(11);
+  pdf.setFont('helvetica', 'normal');
+  
+  let yPos = margin + 25;
+  
+  vocabulary.forEach((item, index) => {
+    // Add a new page if needed
+    if (yPos > 270) { // 297 (A4 height) - bottom margin
+      pdf.addPage();
+      
+      // Add header on new page
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text("Vocabulary Reference Sheet (continued)", margin, margin + 10);
+      
+      // Reset position
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      yPos = margin + 25;
+    }
+    
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`${index + 1}. ${item.term}`, margin, yPos);
+    
+    yPos += lineHeight;
+    
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`${item.definition}`, margin + 5, yPos);
+    
+    yPos += lineHeight;
+    
+    // Add example on next line if it exists
+    if (item.example) {
+      // Check if adding the example would exceed the page boundary
+      if (yPos > 270) {
+        pdf.addPage();
+        
+        // Add header on new page
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text("Vocabulary Reference Sheet (continued)", margin, margin + 10);
+        
+        // Reset position
+        pdf.setFontSize(11);
+        yPos = margin + 25;
+      }
+      
+      pdf.setFont('helvetica', 'italic');
+      pdf.text(`Example: "${item.example}"`, margin + 10, yPos);
+      
+      yPos += lineHeight + 4; // Extra spacing after example
+    } else {
+      yPos += 4; // Just add space between items
+    }
+  });
 }

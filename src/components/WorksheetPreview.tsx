@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
@@ -37,8 +36,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editableContent, setEditableContent] = useState(data.content);
   const [editableExercises, setEditableExercises] = useState<Exercise[]>(data.exercises);
-  const [editableSubtitle, setEditableSubtitle] = useState(data.subtitle || '');
-  const [editableIntroduction, setEditableIntroduction] = useState(data.introduction || '');
   
   // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
@@ -91,6 +88,9 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         toast.success('Your TEACHER worksheet is being prepared for download');
       }
       
+      // Create a proper filename based on view mode
+      const baseFilename = `worksheet-${data.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+      
       // Get current view content ref
       const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
       
@@ -98,7 +98,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       const filename = await generatePdf({
         title: data.title,
         contentRef,
-        viewMode
+        viewMode,
+        vocabulary: data.vocabulary
       });
       
       if (filename) {
@@ -132,7 +133,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       const filename = await generatePdf({
         title: data.title,
         contentRef: otherContentRef,
-        viewMode: otherView
+        viewMode: otherView,
+        vocabulary: data.vocabulary
       });
       
       if (filename) {
@@ -144,7 +146,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   };
   
   return (
-    <div className="mb-8">
+    <div>
       {/* Header with generation info */}
       <WorksheetHeader data={data} />
 
@@ -176,9 +178,9 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               exercises={editableExercises}
               vocabulary={data.vocabulary || []}
               viewMode={viewMode}
-              isEditing={isEditing}
-              subtitle={editableSubtitle}
-              introduction={editableIntroduction}
+              isEditing={false}
+              subtitle={data.subtitle}
+              introduction={data.introduction}
             />
           ) : (
             <WorksheetEditor
@@ -187,11 +189,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               viewMode={viewMode}
               onContentChange={setEditableContent}
               onExerciseChange={handleEditExercise}
-              subtitle={editableSubtitle}
-              introduction={editableIntroduction}
-              onSubtitleChange={setEditableSubtitle}
-              onIntroductionChange={setEditableIntroduction}
-              isEditing={isEditing}
             />
           )}
         </div>
