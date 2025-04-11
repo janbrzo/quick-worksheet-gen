@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { 
@@ -114,12 +115,15 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
           
           // For student view, shuffle the items, but keep original order for teacher view
           const shuffledDefinitions = viewMode === WorksheetView.STUDENT
-            ? shuffleArray(displayItems.map(item => item.definition))
-            : displayItems.map(item => item.definition);
+            ? shuffleArray(displayItems.map(item => ({ definition: item.definition, originalIndex: displayItems.findIndex(d => d.definition === item.definition) })))
+            : displayItems.map((item, index) => ({ definition: item.definition, originalIndex: index }));
+          
+          // Generate letter labels
+          const letterLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
           
           return (
-            <div className="grid grid-cols-2 gap-6">
-              {/* Left column: Terms */}
+            <div className="grid grid-cols-3 gap-4">
+              {/* Left column: Terms (narrower) */}
               <div className="space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Terms
@@ -127,22 +131,44 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
                 {terms.map((item, idx) => (
                   <div key={`term-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
                     <div className="font-semibold text-indigo-700">
-                      {item.term}
+                      {idx + 1}. {item.term}
                     </div>
                   </div>
                 ))}
               </div>
               
-              {/* Right column: Definitions (multi-column layout) */}
+              {/* Middle column: Answers (only visible in teacher view) */}
+              <div className="space-y-3">
+                <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
+                  Answers
+                </div>
+                {terms.map((item, idx) => {
+                  // Find the correct definition for this term
+                  const correctDefinitionIndex = displayItems.findIndex(d => d.term === item.term);
+                  // Find the shuffled position to get the correct letter
+                  const shuffledPosition = shuffledDefinitions.findIndex(d => d.originalIndex === correctDefinitionIndex);
+                  const correctLetter = letterLabels[shuffledPosition];
+                  
+                  return (
+                    <div key={`answer-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
+                      <div className={`font-semibold ${viewMode === WorksheetView.TEACHER ? 'text-emerald-600' : 'text-gray-300'}`}>
+                        {viewMode === WorksheetView.TEACHER ? correctLetter : '_____'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Right column: Definitions */}
               <div className="space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Definitions
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {shuffledDefinitions.map((definition, idx) => (
                     <div key={`def-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
                       <div className="text-gray-700">
-                        {definition}
+                        <span className="font-bold mr-2 text-indigo-700">{letterLabels[idx]}.</span> {definition.definition}
                       </div>
                     </div>
                   ))}
@@ -153,34 +179,46 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
         }
       
       case 'fill-in-blanks':
-        return (
-          <div>
-            {exercise.word_bank && (
-              <div className="flex flex-wrap gap-2 mb-4 p-3 bg-slate-100 rounded-lg">
-                {exercise.word_bank.map((word, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-white border border-gray-200 rounded-md text-indigo-700">
-                    {word}
-                  </span>
-                ))}
-              </div>
-            )}
+        {
+          // Randomize word bank order for the student view
+          const randomizedWordBank = viewMode === WorksheetView.STUDENT && exercise.word_bank 
+            ? shuffleArray([...exercise.word_bank]) 
+            : exercise.word_bank;
+          
+          // Randomize sentences for the student view
+          const randomizedSentences = viewMode === WorksheetView.STUDENT && exercise.sentences 
+            ? shuffleArray([...exercise.sentences]) 
+            : exercise.sentences;
             
-            {exercise.sentences && (
-              <ol className="list-decimal pl-5 space-y-3">
-                {exercise.sentences.map((sentence, idx) => (
-                  <li key={idx} className="pl-1">
-                    <span dangerouslySetInnerHTML={renderHTML(sentence.text)} />
-                    {viewMode === WorksheetView.TEACHER && sentence.answer && (
-                      <span className="ml-2 text-emerald-600 font-medium">
-                        Answer: {sentence.answer}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-        );
+          return (
+            <div>
+              {randomizedWordBank && (
+                <div className="flex flex-wrap gap-2 mb-4 p-3 bg-slate-100 rounded-lg">
+                  {randomizedWordBank.map((word, idx) => (
+                    <span key={idx} className="px-3 py-1 bg-white border border-gray-200 rounded-md text-indigo-700">
+                      {word}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {randomizedSentences && (
+                <ol className="list-decimal pl-5 space-y-3">
+                  {randomizedSentences.map((sentence, idx) => (
+                    <li key={idx} className="pl-1">
+                      <span dangerouslySetInnerHTML={renderHTML(sentence.text)} />
+                      {viewMode === WorksheetView.TEACHER && sentence.answer && (
+                        <span className="ml-2 text-emerald-600 font-medium">
+                          Answer: {sentence.answer}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          );
+        }
       
       case 'multiple-choice':
         return (

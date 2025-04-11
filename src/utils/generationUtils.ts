@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { FormData, WorksheetData, GenerationStatus, Exercise, VocabularyItem, GenerationStep } from '@/types/worksheet';
 import { generateWithAI } from './api';
