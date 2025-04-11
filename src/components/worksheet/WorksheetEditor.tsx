@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Exercise, WorksheetView } from '@/types/worksheet';
-import { Edit, Clock, Save } from 'lucide-react';
+import { Edit, Clock, Pencil, Save } from 'lucide-react';
 
 interface WorksheetEditorProps {
   content: string;
@@ -33,7 +33,8 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
   const editorRef = useRef<HTMLDivElement>(null);
   
   // Handle content changes by finding the edited element and updating state
-  const handleContentChange = (target: HTMLElement, type: string, index?: number, field?: string) => {
+  const handleEditableChange = (e: React.FormEvent<HTMLDivElement>, type: string, index?: number, field?: string) => {
+    const target = e.target as HTMLDivElement;
     const newValue = target.innerText || '';
     
     if (type === 'content') {
@@ -47,67 +48,39 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
     }
   };
   
-  // Enable editing for all editable content elements
+  // Append event listeners to all editable elements
   useEffect(() => {
-    if (!editorRef.current) return;
-    
-    const editableElements = editorRef.current.querySelectorAll('.editable-content');
-    
-    if (isEditing) {
-      // Enable editing
+    if (isEditing && editorRef.current) {
+      const editableElements = editorRef.current.querySelectorAll('.editable-content');
+      
       editableElements.forEach(element => {
         element.setAttribute('contenteditable', 'true');
-        element.classList.add('editable-active');
-        
-        // Add blur event listener to capture changes
-        element.addEventListener('blur', (e) => {
-          const target = e.target as HTMLElement;
-          const type = target.dataset.type || '';
-          const index = target.dataset.index ? parseInt(target.dataset.index) : undefined;
-          const field = target.dataset.field || '';
-          
-          handleContentChange(target, type, index, field);
-        });
+        element.classList.add('border', 'border-amber-200', 'focus:border-amber-400', 'focus:ring-2', 'focus:ring-amber-200', 'hover:bg-amber-50/30');
       });
-      
-      // Add class to parent for styling
-      editorRef.current.classList.add('editable-mode');
-    } else {
-      // Disable editing
-      editableElements.forEach(element => {
-        element.setAttribute('contenteditable', 'false');
-        element.classList.remove('editable-active');
-        
-        // Remove event listener
-        element.removeEventListener('blur', () => {});
-      });
-      
-      // Remove class from parent
-      editorRef.current.classList.remove('editable-mode');
     }
     
-    // Cleanup on unmount
     return () => {
-      const editableElements = editorRef.current?.querySelectorAll('.editable-content');
-      editableElements?.forEach(element => {
-        element.removeEventListener('blur', () => {});
-      });
+      if (editorRef.current) {
+        const editableElements = editorRef.current.querySelectorAll('.editable-content');
+        editableElements.forEach(element => {
+          element.setAttribute('contenteditable', 'false');
+          element.classList.remove('border', 'border-amber-200', 'focus:border-amber-400', 'focus:ring-2', 'focus:ring-amber-200', 'hover:bg-amber-50/30');
+        });
+      }
     };
-  }, [isEditing, onContentChange, onExerciseChange, onSubtitleChange, onIntroductionChange]);
+  }, [isEditing]);
   
   return (
-    <div ref={editorRef} className={isEditing ? 'worksheet-edit-mode' : ''}>
-      {isEditing ? (
-        <div className="bg-amber-50 p-4 border-l-4 border-amber-400 text-amber-800 mb-6 flex items-start rounded-md shadow-sm">
-          <div className="p-2 bg-amber-100 rounded-full mr-3 flex-shrink-0">
-            <Edit size={20} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="font-medium">Editing Mode Enabled</p>
-            <p className="text-sm">Click on any highlighted content to edit. All changes will be automatically saved when you click "Save Changes".</p>
-          </div>
+    <div ref={editorRef} className={isEditing ? 'editable-mode' : ''}>
+      <div className="bg-amber-50 p-4 border-l-4 border-amber-400 text-amber-800 mb-4 flex items-start rounded-md shadow-sm">
+        <div className="p-2 bg-amber-100 rounded-full mr-3">
+          <Edit size={20} className="text-amber-600" />
         </div>
-      ) : null}
+        <div>
+          <p className="font-medium">Editing Mode {isEditing ? 'Enabled' : 'Disabled'}</p>
+          <p className="text-sm">{isEditing ? 'Click on any text to edit. Click "Save Changes" when done.' : 'Click "Edit Worksheet" to start editing the content.'}</p>
+        </div>
+      </div>
       
       {/* Subtitle and Introduction section */}
       {(subtitle !== undefined || introduction !== undefined) && (
@@ -115,11 +88,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           {subtitle !== undefined && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subtitle {isEditing && <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>}
+                Subtitle <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>
               </label>
               <div 
-                className={`editable-content w-full p-2 rounded-md ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-                data-type="subtitle"
+                className="editable-content w-full p-2 rounded-md bg-amber-50/30"
+                onBlur={(e) => handleEditableChange(e, 'subtitle')}
                 suppressContentEditableWarning={true}
               >
                 {subtitle}
@@ -130,11 +103,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           {introduction !== undefined && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Introduction {isEditing && <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>}
+                Introduction <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>
               </label>
               <div 
-                className={`editable-content w-full p-3 rounded-md min-h-[100px] ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-                data-type="introduction"
+                className="editable-content w-full p-3 rounded-md min-h-[100px] bg-amber-50/30"
+                onBlur={(e) => handleEditableChange(e, 'introduction')}
                 suppressContentEditableWarning={true}
               >
                 {introduction}
@@ -146,11 +119,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
       
       <div className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm focus-within:border-amber-400 transition-colors mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Overview {isEditing && <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>}
+          Overview <span className="ml-2 text-amber-600 text-xs font-normal">(Editable)</span>
         </label>
         <div
-          className={`editable-content w-full p-3 rounded-md min-h-[150px] ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-          data-type="content"
+          className="editable-content w-full p-3 rounded-md min-h-[150px] bg-amber-50/30"
+          onBlur={(e) => handleEditableChange(e, 'content')}
           suppressContentEditableWarning={true}
         >
           {content}
@@ -162,6 +135,9 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           <span className="mr-2">Exercises</span>
           <span className="text-xs bg-edu-primary text-white px-2 py-1 rounded-full">{exercises.length}</span>
         </h3>
+        <div className="text-sm text-gray-500 flex items-center gap-2">
+          <Pencil size={16} /> Click on any field below to edit
+        </div>
       </div>
       
       {exercises.map((exercise, index) => (
@@ -169,13 +145,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           <div className="flex justify-between items-start">
             <div className="flex-grow">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Title {isEditing && <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>}
+                Title <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
               </label>
               <div
-                className={`editable-content w-full p-2 rounded-md ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-                data-type="exercise"
-                data-index={index}
-                data-field="title"
+                className="editable-content w-full p-2 rounded-md bg-amber-50/30"
+                onBlur={(e) => handleEditableChange(e, 'exercise', index, 'title')}
                 suppressContentEditableWarning={true}
               >
                 {exercise.title}
@@ -189,13 +163,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Instructions {isEditing && <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>}
+              Instructions <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
             </label>
             <div
-              className={`editable-content w-full p-2 rounded-md ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-              data-type="exercise"
-              data-index={index}
-              data-field="instructions"
+              className="editable-content w-full p-2 rounded-md bg-amber-50/30"
+              onBlur={(e) => handleEditableChange(e, 'exercise', index, 'instructions')}
               suppressContentEditableWarning={true}
             >
               {exercise.instructions}
@@ -204,13 +176,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Content {isEditing && <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>}
+              Content <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
             </label>
             <div
-              className={`editable-content w-full p-3 rounded-md min-h-[150px] ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-              data-type="exercise"
-              data-index={index}
-              data-field="content"
+              className="editable-content w-full p-3 rounded-md min-h-[150px] bg-amber-50/30"
+              onBlur={(e) => handleEditableChange(e, 'exercise', index, 'content')}
               suppressContentEditableWarning={true}
             >
               {exercise.content}
@@ -222,13 +192,11 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
                 <span>Teacher Tips</span> 
                 <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Only visible in Teacher view</span>
-                {isEditing && <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>}
+                <span className="ml-1 text-amber-600 text-xs font-normal">(Editable)</span>
               </label>
               <div
-                className={`editable-content w-full p-3 rounded-md min-h-[150px] ${isEditing ? 'bg-amber-50/30 border border-dashed border-amber-300' : ''}`}
-                data-type="exercise"
-                data-index={index}
-                data-field="teacherAnswers"
+                className="editable-content w-full p-3 rounded-md min-h-[150px] bg-amber-50/30"
+                onBlur={(e) => handleEditableChange(e, 'exercise', index, 'teacherAnswers')}
                 suppressContentEditableWarning={true}
               >
                 {exercise.teacherAnswers || exercise.teacher_tip || ''}
@@ -239,12 +207,12 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
       ))}
       
       {isEditing && (
-        <div className="flex justify-center mt-6 mb-4">
+        <div className="flex justify-center mt-6">
           <button 
             onClick={onSaveChanges}
-            className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-lg shadow-md transition-all transform hover:-translate-y-1 text-lg font-bold"
+            className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-lg shadow-md transition-all transform hover:-translate-y-1"
           >
-            <Save size={22} />
+            <Save size={20} />
             Save All Changes
           </button>
         </div>

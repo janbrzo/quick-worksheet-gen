@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { 
@@ -118,65 +117,31 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
             ? shuffleArray(displayItems.map(item => item.definition))
             : displayItems.map(item => item.definition);
           
-          // Create answer mapping for teacher view
-          const answerMap = {};
-          if (viewMode === WorksheetView.TEACHER) {
-            displayItems.forEach((item, idx) => {
-              // Find the index of this definition in the shuffled array
-              const shuffledIndex = shuffledDefinitions.findIndex(def => def === item.definition);
-              answerMap[idx] = String.fromCharCode(65 + shuffledIndex); // A, B, C, etc.
-            });
-          }
-          
           return (
-            <div className="grid grid-cols-12 gap-6">
-              {/* Left column: Terms (narrower) */}
-              <div className="col-span-4 space-y-3">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left column: Terms */}
+              <div className="space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Terms
                 </div>
                 {terms.map((item, idx) => (
                   <div key={`term-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
                     <div className="font-semibold text-indigo-700">
-                      {idx + 1}. {item.term}
+                      {item.term}
                     </div>
-                    {viewMode === WorksheetView.TEACHER && (
-                      <div className="ml-auto bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md text-sm font-medium">
-                        Answer: {answerMap[idx] || '?'}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
               
-              {/* Middle column: Student answer space for teacher view */}
-              {viewMode === WorksheetView.TEACHER && (
-                <div className="col-span-1 space-y-3 flex flex-col">
-                  <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
-                    Match
-                  </div>
-                  <div className="flex-grow flex flex-col justify-evenly">
-                    {terms.map((_, idx) => (
-                      <div key={`answer-${idx}`} className="flex items-center justify-center h-10 border border-dotted border-gray-300 rounded-md">
-                        {/* Empty box for writing answers */}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
               {/* Right column: Definitions (multi-column layout) */}
-              <div className={`${viewMode === WorksheetView.TEACHER ? 'col-span-7' : 'col-span-8'} space-y-3`}>
+              <div className="space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Definitions
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {shuffledDefinitions.map((definition, idx) => (
                     <div key={`def-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
-                      <div className="w-6 h-6 flex-shrink-0 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mr-2 font-medium">
-                        {String.fromCharCode(65 + idx)}
-                      </div>
-                      <div className="text-gray-700 text-sm">
+                      <div className="text-gray-700">
                         {definition}
                       </div>
                     </div>

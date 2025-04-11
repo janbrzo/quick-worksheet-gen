@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { FormData, WorksheetData, GenerationStatus, GenerationStep, Exercise, VocabularyItem } from '../types/worksheet';
 import { toast } from 'sonner';
@@ -64,80 +65,26 @@ export const useFormData = () => {
     try {
       console.log("Processing JSON data:", jsonData);
       
-      // Ensure we have the correct number of exercises based on lesson duration
-      const requiredExerciseCount = getExerciseCount(formData.lessonDuration);
-      
       // Map exercises to our Exercise interface
-      let mappedExercises: Exercise[] = [];
-      if (jsonData.exercises && Array.isArray(jsonData.exercises)) {
-        mappedExercises = jsonData.exercises.slice(0, requiredExerciseCount).map((exercise: any) => {
-          // Ensure each exercise has required properties
-          let exerciseContent = exercise.content || "";
-          
-          // Check if we need to add more questions to reach 10
-          let questions = exercise.questions || [];
-          if (questions.length < 10 && Array.isArray(questions)) {
-            // Fill up to 10 questions
-            for (let i = questions.length; i < 10; i++) {
-              questions.push({
-                text: `Question ${i+1} about ${formData.lessonTopic}?`,
-                answer: `Sample answer ${i+1}`
-              });
-            }
-          }
-          
-          // Check if we need to add more items for matching exercises
-          let items = exercise.items || [];
-          if (items.length < 10 && Array.isArray(items)) {
-            // Fill up to 10 items
-            for (let i = items.length; i < 10; i++) {
-              items.push({
-                term: `Term ${i+1}`,
-                definition: `Definition ${i+1} related to ${formData.lessonTopic}`
-              });
-            }
-          }
-          
-          // Check if we need to add more sentences for fill-in-blanks
-          let sentences = exercise.sentences || [];
-          if (sentences.length < 10 && Array.isArray(sentences)) {
-            // Fill up to 10 sentences
-            for (let i = sentences.length; i < 10; i++) {
-              sentences.push({
-                text: `Sentence ${i+1} with a _____ to fill.`,
-                answer: `word${i+1}`
-              });
-            }
-          }
-          
-          return {
-            title: exercise.title || "Exercise",
-            type: exercise.type || "other",
-            instructions: exercise.instructions || "",
-            content: exerciseContent,
-            teacherAnswers: exercise.teacher_tip || "",
-            duration: exercise.time || 5,
-            icon: exercise.icon,
-            questions: questions,
-            items: items,
-            word_bank: exercise.word_bank || [],
-            sentences: sentences,
-            dialogue: exercise.dialogue || [],
-            expressions: exercise.expressions || [],
-            expression_instruction: exercise.expression_instruction || "",
-            teacher_tip: exercise.teacher_tip || ""
-          };
-        });
-      }
-      
-      // If we don't have enough exercises, generate more
-      if (mappedExercises.length < requiredExerciseCount) {
-        const additionalExercises = generateExercises(
-          formData, 
-          requiredExerciseCount - mappedExercises.length
-        );
-        mappedExercises = [...mappedExercises, ...additionalExercises];
-      }
+      const mappedExercises: Exercise[] = jsonData.exercises.map((exercise: any) => {
+        return {
+          title: exercise.title || "Exercise",
+          type: exercise.type || "other",
+          instructions: exercise.instructions || "",
+          content: exercise.content || "",
+          teacherAnswers: exercise.teacher_tip || "",
+          duration: exercise.time || 5,
+          icon: exercise.icon,
+          questions: exercise.questions,
+          items: exercise.items,
+          word_bank: exercise.word_bank,
+          sentences: exercise.sentences,
+          dialogue: exercise.dialogue,
+          expressions: exercise.expressions,
+          expression_instruction: exercise.expression_instruction,
+          teacher_tip: exercise.teacher_tip
+        };
+      });
       
       // Map vocabulary sheet to our VocabularyItem interface
       let vocabularyItems: VocabularyItem[] = [];
@@ -149,19 +96,6 @@ export const useFormData = () => {
             example: item.example || ""
           };
         });
-        
-        // Ensure we have exactly 15 vocabulary items
-        if (vocabularyItems.length < 15) {
-          // Generate more vocabulary items
-          const additionalVocabulary = generateVocabulary(formData, 15 - vocabularyItems.length);
-          vocabularyItems = [...vocabularyItems, ...additionalVocabulary];
-        } else if (vocabularyItems.length > 15) {
-          // Trim excess vocabulary items
-          vocabularyItems = vocabularyItems.slice(0, 15);
-        }
-      } else {
-        // Generate all vocabulary items if none were provided
-        vocabularyItems = generateVocabulary(formData, 15);
       }
       
       // Build the worksheet data
@@ -171,8 +105,8 @@ export const useFormData = () => {
         introduction: jsonData.introduction || "",
         content: jsonData.introduction || generateMockContent(formData),
         teacherNotes: generateTeacherTips(formData),
-        exercises: mappedExercises,
-        vocabulary: vocabularyItems,
+        exercises: mappedExercises.length > 0 ? mappedExercises : generateExercises(formData, getExerciseCount(formData.lessonDuration)),
+        vocabulary: vocabularyItems.length > 0 ? vocabularyItems : generateVocabulary(formData, 15),
         vocabulary_sheet: jsonData.vocabulary_sheet,
         generationTime: 0, // Will be set later
         sourceCount: Math.floor(Math.random() * (100 - 51 + 1)) + 51,

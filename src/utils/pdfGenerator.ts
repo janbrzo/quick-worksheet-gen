@@ -1,3 +1,4 @@
+
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
@@ -10,7 +11,7 @@ interface PdfGenerationOptions {
   contentRef: RefType;
   viewMode: WorksheetView;
   vocabulary?: any[];
-  skipVocabularyPage?: boolean;
+  skipVocabularyPage?: boolean; // Add this property to fix the type error
 }
 
 /**
@@ -25,30 +26,21 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
       return null;
     }
     
-    // Create a proper filename based on view mode and date
+    // Create a proper filename based on view mode
     const viewSuffix = viewMode === WorksheetView.STUDENT ? "student" : "teacher";
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
     const baseFilename = `worksheet-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
-    const filename = `${baseFilename}-${viewSuffix}-${today}.pdf`;
+    const filename = `${baseFilename}-${viewSuffix}.pdf`;
     
-    // Create PDF
+    // Create PDF with single canvas approach (more reliable for complex layouts)
     const pdf = new jsPDF('p', 'mm', 'a4');
     
-    // Render the content at a lower scale for better performance while maintaining quality
+    // Render the entire content as one image
     const canvas = await html2canvas(contentRef.current, {
-      scale: 1.2, // Reduced for smaller file size
+      scale: 2, // Higher scale for better quality
       useCORS: true,
       logging: false,
       allowTaint: true,
-      backgroundColor: '#ffffff',
-      imageTimeout: 0, // Wait indefinitely for images
-      onclone: (clonedDoc) => {
-        // Remove unnecessary elements before rendering
-        const elementsToRemove = clonedDoc.querySelectorAll('.no-print, button, .tooltip');
-        elementsToRemove.forEach(el => {
-          el.remove();
-        });
-      }
+      backgroundColor: '#ffffff'
     });
 
     // PDF dimensions (A4)
@@ -62,9 +54,6 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     
     // Calculate how many full pages we need
     const pageCount = Math.ceil(contentHeight / (pdfHeight - (2 * margin)));
-    
-    // Compress the image data
-    const imageQuality = 0.6; // 60% quality - reduced for smaller file size
     
     // Add content page by page
     for (let i = 0; i < pageCount; i++) {
@@ -94,13 +83,13 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
           0, 0, canvas.width, sourceHeight
         );
         
-        // Add this slice to the PDF with compression
-        const imgData = tempCanvas.toDataURL('image/jpeg', imageQuality);
+        // Add this slice to the PDF
+        const imgData = tempCanvas.toDataURL('image/png');
         const sliceHeight = (sourceHeight * contentWidth) / canvas.width;
         
         pdf.addImage(
           imgData,
-          'JPEG', // Using JPEG instead of PNG for better compression
+          'PNG',
           margin, 
           margin,
           contentWidth, 
@@ -115,7 +104,7 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
       addVocabularyPage(pdf, vocabulary);
     }
     
-    // Save PDF - use the correct API without options
+    // Save PDF
     pdf.save(filename);
     return filename;
     
