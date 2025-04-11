@@ -51,7 +51,7 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
         
         <div className="flex items-center space-x-2">
           <Button
-            variant={isEditing ? "success" : "outline"}
+            variant="outline"
             size="sm"
             onClick={handleEditToggle}
             className={`flex items-center gap-2 ${isEditing ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}

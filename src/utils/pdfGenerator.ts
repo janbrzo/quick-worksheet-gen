@@ -1,4 +1,3 @@
-
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
@@ -11,7 +10,7 @@ interface PdfGenerationOptions {
   contentRef: RefType;
   viewMode: WorksheetView;
   vocabulary?: any[];
-  skipVocabularyPage?: boolean; // Add this property to fix the type error
+  skipVocabularyPage?: boolean;
 }
 
 /**
@@ -37,7 +36,7 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     
     // Render the content at a lower scale for better performance while maintaining quality
     const canvas = await html2canvas(contentRef.current, {
-      scale: 1.5, // Reduced from 2 to reduce file size
+      scale: 1.2, // Reduced for smaller file size
       useCORS: true,
       logging: false,
       allowTaint: true,
@@ -65,7 +64,7 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     const pageCount = Math.ceil(contentHeight / (pdfHeight - (2 * margin)));
     
     // Compress the image data
-    const imageQuality = 0.8; // 80% quality - good balance between quality and file size
+    const imageQuality = 0.6; // 60% quality - reduced for smaller file size
     
     // Add content page by page
     for (let i = 0; i < pageCount; i++) {
@@ -116,13 +115,8 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
       addVocabularyPage(pdf, vocabulary);
     }
     
-    // Save PDF with compression options
-    const pdfOptions = {
-      compress: true,
-      precision: 2
-    };
-    
-    pdf.save(filename, pdfOptions);
+    // Save PDF - use the correct API without options
+    pdf.save(filename);
     return filename;
     
   } catch (err) {
