@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { FormData, WorksheetData, GenerationStatus, GenerationStep, Exercise, VocabularyItem } from '../types/worksheet';
 import { toast } from 'sonner';
@@ -151,8 +152,8 @@ export const useFormData = () => {
     // Set generation status to generating
     setGenerationStatus(GenerationStatus.GENERATING);
     
-    // Set minimum processing time (31-58 seconds)
-    const minProcessingTime = Math.floor(Math.random() * (58000 - 31000)) + 31000;
+    // Generate random processing time (21-49 seconds)
+    const minProcessingTime = Math.floor(Math.random() * (49000 - 21000)) + 21000;
     
     // Create generation steps
     const steps = createGenerationSteps();
@@ -161,23 +162,41 @@ export const useFormData = () => {
     try {
       const startTime = Date.now();
       
-      // Animate steps
+      // We'll only show one step at a time
+      let currentStepIndex = 0;
+      
+      // Animate steps one at a time
       const stepsAnimation = new Promise<void>(async resolve => {
-        for (let i = 0; i < steps.length; i++) {
-          // Calculate step duration to fit within the total processing time
-          const stepDuration = minProcessingTime / (steps.length + 2); // +2 for margin
-          await new Promise(r => setTimeout(r, stepDuration));
-          
-          setGenerationSteps(prev => {
-            const updated = [...prev];
-            updated[i].completed = true;
-            return updated;
-          });
-          
-          const currentTime = Math.round((Date.now() - startTime) / 1000);
-          setGenerationTime(currentTime);
-        }
-        resolve();
+        const totalSteps = steps.length;
+        const timePerStep = minProcessingTime / totalSteps;
+        
+        const updateNextStep = async () => {
+          if (currentStepIndex < totalSteps) {
+            // Mark current step as completed
+            setGenerationSteps(prev => {
+              const updated = [...prev];
+              updated[currentStepIndex].completed = true;
+              return updated;
+            });
+            
+            // Move to next step
+            currentStepIndex++;
+            
+            // Update elapsed time
+            const currentTime = Math.round((Date.now() - startTime) / 1000);
+            setGenerationTime(currentTime);
+            
+            // Wait for the next step's turn
+            if (currentStepIndex < totalSteps) {
+              setTimeout(updateNextStep, timePerStep);
+            } else {
+              resolve();
+            }
+          }
+        };
+        
+        // Start the first step update
+        setTimeout(updateNextStep, timePerStep);
       });
       
       let jsonData;

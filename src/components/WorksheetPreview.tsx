@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editableContent, setEditableContent] = useState(data.content);
   const [editableExercises, setEditableExercises] = useState<Exercise[]>(data.exercises);
+  const [editableSubtitle, setEditableSubtitle] = useState(data.subtitle || "");
+  const [editableIntroduction, setEditableIntroduction] = useState(data.introduction || "");
   
   // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
@@ -88,9 +91,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         toast.success('Your TEACHER worksheet is being prepared for download');
       }
       
-      // Create a proper filename based on view mode
-      const baseFilename = `worksheet-${data.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
-      
       // Get current view content ref
       const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
       
@@ -99,7 +99,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         title: data.title,
         contentRef,
         viewMode,
-        vocabulary: data.vocabulary
+        vocabulary: [], // Don't include vocabulary twice (it's already in the worksheet content)
+        skipVocabularyPage: true // Skip the extra vocabulary page
       });
       
       if (filename) {
@@ -134,7 +135,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         title: data.title,
         contentRef: otherContentRef,
         viewMode: otherView,
-        vocabulary: data.vocabulary
+        vocabulary: [], // Don't include vocabulary twice
+        skipVocabularyPage: true
       });
       
       if (filename) {
@@ -179,8 +181,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               vocabulary={data.vocabulary || []}
               viewMode={viewMode}
               isEditing={false}
-              subtitle={data.subtitle}
-              introduction={data.introduction}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
             />
           ) : (
             <WorksheetEditor
@@ -189,6 +191,12 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               viewMode={viewMode}
               onContentChange={setEditableContent}
               onExerciseChange={handleEditExercise}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
+              onSubtitleChange={setEditableSubtitle}
+              onIntroductionChange={setEditableIntroduction}
+              isEditing={isEditing}
+              onSaveChanges={handleEditToggle}
             />
           )}
         </div>

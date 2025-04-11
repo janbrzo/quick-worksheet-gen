@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { 
@@ -58,6 +57,22 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
   const renderHTML = (html: string) => {
     return { __html: html };
   };
+  
+  // Filter out interactive quiz exercises
+  const filteredExercises = exercises.filter(exercise => 
+    !(exercise.type as string).includes('interactive-quiz') && 
+    !(exercise.type as string).includes('quiz')
+  );
+  
+  // Helper function to shuffle array
+  const shuffleArray = <T extends any>(array: T[]): T[] => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
 
   // Helper to render different exercise types
   const renderExerciseContent = (exercise: Exercise) => {
@@ -92,20 +107,50 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       
       case 'matching':
       case 'vocabulary':
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {exercise.items && exercise.items.map((item, idx) => (
-              <div key={idx} className="flex items-center p-2 border border-gray-200 bg-slate-50 rounded-md">
-                <div className="font-semibold min-w-[100px] text-indigo-700">
-                  {item.term}
+        {
+          // For student view, shuffle the items
+          let displayItems = exercise.items || [];
+          let terms = displayItems.map(item => ({ term: item.term, isOriginal: true }));
+          
+          // For student view, shuffle the items, but keep original order for teacher view
+          const shuffledDefinitions = viewMode === WorksheetView.STUDENT
+            ? shuffleArray(displayItems.map(item => item.definition))
+            : displayItems.map(item => item.definition);
+          
+          return (
+            <div className="grid grid-cols-2 gap-6">
+              {/* Left column: Terms */}
+              <div className="space-y-3">
+                <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
+                  Terms
                 </div>
-                <div className="flex-grow pl-3 border-l border-gray-200">
-                  {item.definition}
+                {terms.map((item, idx) => (
+                  <div key={`term-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
+                    <div className="font-semibold text-indigo-700">
+                      {item.term}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Right column: Definitions (multi-column layout) */}
+              <div className="space-y-3">
+                <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
+                  Definitions
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {shuffledDefinitions.map((definition, idx) => (
+                    <div key={`def-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
+                      <div className="text-gray-700">
+                        {definition}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        );
+            </div>
+          );
+        }
       
       case 'fill-in-blanks':
         return (
@@ -225,7 +270,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       
       {/* Exercises */}
       <div className="space-y-8">
-        {exercises.map((exercise, index) => (
+        {filteredExercises.map((exercise, index) => (
           <div key={index} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
