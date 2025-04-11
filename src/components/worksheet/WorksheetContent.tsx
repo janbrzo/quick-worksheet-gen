@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { 
@@ -102,7 +103,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       case 'matching':
       case 'vocabulary':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-4 w-full">
             {exercise.items && (() => {
               // Create a shuffled array of definition items for student view
               const definitions = exercise.items.map(item => ({
@@ -112,38 +113,42 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
               
               // Show the items in order for teacher view or when editing
               if (viewMode === WorksheetView.TEACHER || isEditing) {
-                return exercise.items.map((item, idx) => (
-                  <div key={idx} className="flex items-center p-2 border border-gray-200 bg-slate-50 rounded-md">
-                    <div className="font-semibold min-w-[100px] text-indigo-700">
-                      {item.term}
-                    </div>
-                    <div className="flex-grow pl-3 border-l border-gray-200">
-                      {item.definition}
-                    </div>
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {exercise.items.map((item, idx) => (
+                      <div key={idx} className="flex items-center p-2 border border-gray-200 bg-slate-50 rounded-md">
+                        <div className="font-semibold min-w-[100px] text-indigo-700">
+                          {item.term}
+                        </div>
+                        <div className="flex-grow pl-3 border-l border-gray-200">
+                          {item.definition}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ));
+                );
               } else {
                 // For student view, keep terms in order but shuffle definitions
                 const shuffledDefinitions = shuffleArray(definitions);
                 
                 return (
-                  <div className="space-y-4 w-full">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* Terms column */}
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-center border-b pb-2 text-indigo-600">Terms</h4>
-                        {exercise.items.map((item, idx) => (
-                          <div key={idx} className="p-2 border border-gray-200 bg-slate-50 rounded-md">
-                            <div className="font-semibold text-indigo-700">
-                              {item.term}
-                            </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Terms column */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-center border-b pb-2 text-indigo-600">Terms</h4>
+                      {exercise.items.map((item, idx) => (
+                        <div key={idx} className="p-2 border border-gray-200 bg-slate-50 rounded-md">
+                          <div className="font-semibold text-indigo-700">
+                            {item.term}
                           </div>
-                        ))}
-                      </div>
-                      
-                      {/* Definitions column */}
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-center border-b pb-2 text-indigo-600">Definitions</h4>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Definitions column - now with multiple columns for better layout */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-center border-b pb-2 text-indigo-600">Definitions</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {shuffledDefinitions.map((item, idx) => (
                           <div key={item.id} className="p-2 border border-gray-200 bg-slate-50 rounded-md">
                             <div className="text-gray-700">
@@ -261,7 +266,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
 
   // Filter out any interactive quiz exercise types
   const filteredExercises = exercises.filter(exercise => 
-    exercise.type !== 'interactive-quiz' && exercise.type !== 'quiz'
+    !(exercise.type as string).includes("interactive-quiz") && !(exercise.type as string).includes("quiz")
   );
 
   return (

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Edit, Download, Save, Eye, EyeOff } from 'lucide-react';
+import { Edit, Download, Save, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { WorksheetView } from '@/types/worksheet';
 
 interface WorksheetToolbarProps {
@@ -20,12 +20,12 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
   downloadWorksheet
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-gray-50 p-4 rounded-lg shadow-sm">
+    <div className="flex flex-col sm:flex-row justify-between items-start mb-6">
       <div className="flex items-center space-x-2 mb-4 sm:mb-0">
         <Button
           variant={viewMode === WorksheetView.STUDENT ? "default" : "outline"}
           onClick={() => setWorksheetView(WorksheetView.STUDENT)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-edu-primary hover:bg-edu-dark"
         >
           <Eye size={16} />
           <span>Student View</span>
@@ -33,7 +33,7 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
         <Button
           variant={viewMode === WorksheetView.TEACHER ? "default" : "outline"}
           onClick={() => setWorksheetView(WorksheetView.TEACHER)}
-          className="flex items-center gap-2"
+          className={`flex items-center gap-2 ${viewMode === WorksheetView.TEACHER ? "bg-edu-primary hover:bg-edu-dark" : ""}`}
         >
           <EyeOff size={16} />
           <span>Teacher View</span>
@@ -47,16 +47,16 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
             <span className="text-sm font-medium">Editing Mode</span>
           </div>
         ) : (
-          <div className="bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1.5 rounded-md flex items-center">
-            <Edit size={16} className="mr-2 text-gray-500" />
-            <span className="text-sm font-medium">Click Edit to modify</span>
+          <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 px-4 py-2 rounded-md flex items-center">
+            <ArrowRight size={16} className="mr-2 text-indigo-600" />
+            <span className="text-sm font-medium">Click the button to edit your worksheet</span>
           </div>
         )}
         
         <Button
           variant={isEditing ? "secondary" : "outline"}
           onClick={handleEditToggle}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white"
         >
           {isEditing ? <Save size={16} /> : <Edit size={16} />}
           <span>{isEditing ? "Save Changes" : "Edit Worksheet"}</span>

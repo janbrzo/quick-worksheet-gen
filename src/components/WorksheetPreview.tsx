@@ -91,9 +91,6 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         toast.success('Your TEACHER worksheet is being prepared for download');
       }
       
-      // Create a proper filename based on view mode
-      const baseFilename = `worksheet-${data.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
-      
       // Get current view content ref
       const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
       
@@ -101,8 +98,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       const filename = await generatePdf({
         title: data.title,
         contentRef,
-        viewMode,
-        vocabulary: data.vocabulary
+        viewMode
       });
       
       if (filename) {
@@ -136,8 +132,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       const filename = await generatePdf({
         title: data.title,
         contentRef: otherContentRef,
-        viewMode: otherView,
-        vocabulary: data.vocabulary
+        viewMode: otherView
       });
       
       if (filename) {
@@ -149,7 +144,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   };
   
   return (
-    <div>
+    <div className="mb-8">
       {/* Header with generation info */}
       <WorksheetHeader data={data} />
 
