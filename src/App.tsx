@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import { FileText } from "lucide-react";
+import { FileText as FileTextIcon } from "lucide-react"; // Fixed the import
 import React from "react";
 
 function App() {
