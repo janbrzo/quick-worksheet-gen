@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { FormData, WorksheetData, GenerationStatus, Exercise, VocabularyItem, GenerationStep } from '@/types/worksheet';
 import { generateWithAI } from './api';
@@ -140,7 +139,8 @@ export function generateVocabulary(data: FormData, count: number): VocabularyIte
 // Generate exercises for the worksheet
 export function generateExercises(data: FormData, count: number): Exercise[] {
   const exerciseTypes: Exercise['type'][] = [
-    'vocabulary', 'reading', 'writing', 'speaking', 'grammar', 'listening'
+    'vocabulary', 'reading', 'writing', 'speaking', 'grammar', 'listening',
+    'matching', 'fill-in-blanks', 'multiple-choice', 'dialogue', 'discussion'
   ];
   
   // Calculate time per exercise based on total lesson duration

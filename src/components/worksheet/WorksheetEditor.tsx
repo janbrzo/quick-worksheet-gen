@@ -14,6 +14,7 @@ interface WorksheetEditorProps {
   introduction?: string;
   onSubtitleChange?: (subtitle: string) => void;
   onIntroductionChange?: (introduction: string) => void;
+  isEditing: boolean;
 }
 
 const WorksheetEditor: React.FC<WorksheetEditorProps> = ({ 
@@ -25,11 +26,12 @@ const WorksheetEditor: React.FC<WorksheetEditorProps> = ({
   subtitle,
   introduction,
   onSubtitleChange,
-  onIntroductionChange
+  onIntroductionChange,
+  isEditing
 }) => {
   return (
     <div className="space-y-6">
-      <div className="bg-amber-50 p-4 border-l-4 border-amber-400 text-amber-800 mb-4 flex items-start rounded-md shadow-sm">
+      <div className={`bg-amber-50 p-4 border-l-4 border-amber-400 text-amber-800 mb-4 flex items-start rounded-md shadow-sm ${isEditing ? '' : 'hidden'}`}>
         <div className="p-2 bg-amber-100 rounded-full mr-3">
           <Edit size={20} className="text-amber-600" />
         </div>

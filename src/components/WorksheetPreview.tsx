@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { WorksheetData, Exercise, FeedbackData, WorksheetView } from '@/types/worksheet';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editableContent, setEditableContent] = useState(data.content);
   const [editableExercises, setEditableExercises] = useState<Exercise[]>(data.exercises);
+  const [editableSubtitle, setEditableSubtitle] = useState(data.subtitle || '');
+  const [editableIntroduction, setEditableIntroduction] = useState(data.introduction || '');
   
   // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
@@ -178,9 +181,9 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               exercises={editableExercises}
               vocabulary={data.vocabulary || []}
               viewMode={viewMode}
-              isEditing={false}
-              subtitle={data.subtitle}
-              introduction={data.introduction}
+              isEditing={isEditing}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
             />
           ) : (
             <WorksheetEditor
@@ -189,6 +192,11 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               viewMode={viewMode}
               onContentChange={setEditableContent}
               onExerciseChange={handleEditExercise}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
+              onSubtitleChange={setEditableSubtitle}
+              onIntroductionChange={setEditableIntroduction}
+              isEditing={isEditing}
             />
           )}
         </div>
