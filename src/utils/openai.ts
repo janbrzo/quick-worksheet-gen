@@ -45,9 +45,21 @@ const buildJsonPrompt = (params: FormData): string => {
     formattedDuration = "60 minutes";
   }
   
+  // Determine the number of exercises based on lesson duration
+  let exerciseCount = 6;
+  if (formattedDuration.includes("30")) {
+    exerciseCount = 4;
+  } else if (formattedDuration.includes("60")) {
+    exerciseCount = 8;
+  }
+  
   // Build the prompt using the template provided
   let prompt = `
-Create a professional English language worksheet for a ${formattedDuration} lesson.
+You are an expert English language teacher creating a specific, high-quality worksheet.
+Create a professional, context-specific, structured, comprehensive English language worksheet that is ready to use immediately.
+Worksheet is for a ${formattedDuration} lesson.
+The worksheet must contain ${exerciseCount} exercises suitable for the given time frame.
+Each exercise must include exactly 10 questions/items/sentences as appropriate
 
 TOPIC: ${sanitizeInput(lessonTopic)}
 GOAL: ${sanitizeInput(lessonObjective)}
@@ -62,134 +74,126 @@ TEACHING PREFERENCES: ${sanitizeInput(preferences)}`;
     prompt += `\nADDITIONAL INFORMATION: ${sanitizeInput(additionalInfo)}`;
   }
 
-  // Determine the number of exercises based on lesson duration
-  let exerciseCount = 6;
-  if (formattedDuration.includes("30")) {
-    exerciseCount = 4;
-  } else if (formattedDuration.includes("60")) {
-    exerciseCount = 8;
-  }
-
   prompt += `
-The worksheet should contain ${exerciseCount} exercises suitable for the given time frame. 
-Create a structured, comprehensive worksheet that is ready to use immediately.
-
 Your response must be in JSON format with the following structure:
 
 \`\`\`json
 {
-    "title": "Main title of the worksheet (typically the topic)",
-    "subtitle": "Subtitle (typically the goal)",
-    "introduction": "Brief 1-2 sentence introduction to the worksheet explaining what students will practice",
-    "exercises": [
+  "title": "Topic title",
+  "subtitle": "Goal description",
+  "introduction": "Brief 1-2 sentence overview of the worksheet",
+  "exercises": [
+    {
+      "type": "reading",
+      "title": "Exercise 1: Reading",
+      "icon": "fa-book-open",
+      "time": 8,
+      "instructions": "Read the following text and then answer the questions below.",
+      "content": "Reading passage with 4-5 paragraphs related to the topic...",
+      "questions": [
+        {"text": "Question 1?", "answer": "Answer 1"},
+        {"text": "Question 2?", "answer": "Answer 2"},
+        // Include 10 questions total
+      ],
+      "teacher_tip": "Advice for teachers on how to use this exercise effectively"
+    },
+    {
+      "type": "matching",
+      "title": "Exercise 2: Vocabulary Matching",
+      "icon": "fa-link",
+      "time": 7,
+      "instructions": "Match each term with its correct definition.",
+      "items": [
+        {"term": "Term 1", "definition": "Definition A"},
+        {"term": "Term 2", "definition": "Definition B"},
+        // Include 10 matching items total
+      ],
+      "teacher_tip": "Advice for teachers on how to use this exercise effectively"
+    },
+    {
+      "type": "fill-in-blanks",
+      "title": "Exercise 3: Fill in the Blanks",
+      "icon": "fa-pencil-alt",
+      "time": 8,
+      "instructions": "Complete each sentence with the correct word from the box.",
+      "word_bank": ["word1", "word2", "word3", "word4", "word5", "word6", "word7", "word8", "word9", "word10"],
+      "sentences": [
+        {"text": "Sentence with a _____ to fill.", "answer": "word1"},
+        {"text": "Another sentence with a _____ to fill.", "answer": "word2"},
+        // Include 10 sentences total
+      ],
+      "teacher_tip": "Advice for teachers on how to use this exercise effectively"
+    },
+    {
+      "type": "multiple-choice",
+      "title": "Exercise 4: Multiple Choice",
+      "icon": "fa-check-square",
+      "time": 7,
+      "instructions": "Choose the best option to complete each sentence.",
+      "questions": [
         {
-            "type": "reading",
-            "title": "Exercise 1: Reading",
-            "time": 8,
-            "icon": "fa-book-open",
-            "instructions": "Read the following text and then answer the questions below.",
-            "content": "<p><strong>Title</strong></p><p>Paragraph 1...</p><p>Paragraph 2...</p>",
-            "questions": [
-                {"text": "Question 1?", "answer": "Answer 1"}
-                // More questions...
-            ],
-            "teacher_tip": "Tip for teachers about how to use this exercise effectively"
+          "text": "Question text with blank to fill",
+          "options": [
+            {"label": "A", "text": "Option A", "correct": false},
+            {"label": "B", "text": "Option B", "correct": false},
+            {"label": "C", "text": "Option C", "correct": true},
+            {"label": "D", "text": "Option D", "correct": false}
+          ]
         },
-        {
-            "type": "matching",
-            "title": "Exercise 2: Vocabulary Matching",
-            "time": 7,
-            "icon": "fa-link",
-            "instructions": "Match each term with its correct definition.",
-            "items": [
-                {"term": "1. Term", "definition": "A. Definition"}
-                // More items...
-            ],
-            "teacher_tip": "Tip for teachers about using this matching exercise"
-        },
-        {
-            "type": "fill-in-blanks",
-            "title": "Exercise 3: Fill in the Blanks",
-            "time": 8,
-            "icon": "fa-pencil-alt",
-            "instructions": "Complete the sentences with the correct words from the box.",
-            "word_bank": ["word1", "word2", "word3"],
-            "sentences": [
-                {"text": "This sentence has a _____ to fill.", "answer": "word1"}
-                // More sentences...
-            ],
-            "teacher_tip": "Tip for teachers about this fill-in-the-blanks exercise"
-        },
-        {
-            "type": "multiple-choice",
-            "title": "Exercise 4: Multiple Choice",
-            "time": 7,
-            "icon": "fa-check-square",
-            "instructions": "Choose the best option to complete each sentence.",
-            "questions": [
-                {
-                    "text": "Question text with a blank ________.",
-                    "options": [
-                        {"label": "A", "text": "Option A", "correct": false},
-                        {"label": "B", "text": "Option B", "correct": true},
-                        {"label": "C", "text": "Option C", "correct": false},
-                        {"label": "D", "text": "Option D", "correct": false}
-                    ]
-                }
-                // More questions...
-            ],
-            "teacher_tip": "Tip for teachers about using this multiple choice exercise"
-        },
-        {
-            "type": "dialogue",
-            "title": "Exercise 5: Speaking Practice",
-            "time": 10,
-            "icon": "fa-comments",
-            "instructions": "Practice the following dialogue with a partner. Then create your own similar conversation.",
-            "dialogue": [
-                {"speaker": "Person A", "text": "Line of dialogue"},
-                {"speaker": "Person B", "text": "Response"}
-                // More dialogue lines...
-            ],
-            "expression_instruction": "Now create your own dialogue using these expressions:",
-            "expressions": ["Expression 1", "Expression 2", "Expression 3"],
-            "teacher_tip": "Tip for teachers about this dialogue exercise"
-        },
-        {
-            "type": "discussion",
-            "title": "Exercise 6: Discussion",
-            "time": 5,
-            "icon": "fa-question-circle",
-            "instructions": "Discuss the following questions with your partner or in small groups.",
-            "questions": [
-                "Discussion question 1?"
-                // More questions...
-            ],
-            "teacher_tip": "Tip for teachers about facilitating discussion"
-        }
-        // Add more exercises based on exercise_count
-    ],
-    "vocabulary_sheet": [
-        {"term": "Term 1", "meaning": "Definition 1"},
-        {"term": "Term 2", "meaning": "Definition 2"}
-        // At least 15 vocabulary items related to the topic
-    ]
+        // Include 10 multiple-choice questions total
+      ],
+      "teacher_tip": "Advice for teachers on how to use this exercise effectively"
+    },
+    {
+      "type": "dialogue",
+      "title": "Exercise 5: Speaking Practice",
+      "icon": "fa-comments",
+      "time": 10,
+      "instructions": "Practice the following dialogue with a partner. Then create your own similar conversation.",
+      "dialogue": [
+        {"speaker": "Person A", "text": "First line of dialogue"},
+        {"speaker": "Person B", "text": "Response to first line"},
+        // Include 8-10 lines of dialogue
+      ],
+      "expression_instruction": "Now create your own dialogue using these expressions:",
+      "expressions": ["Expression 1", "Expression 2", "Expression 3", "Expression 4", "Expression 5", 
+                     "Expression 6", "Expression 7", "Expression 8", "Expression 9", "Expression 10"],
+      "teacher_tip": "Advice for teachers on how to use this exercise effectively"
+    },
+    {
+      "type": "discussion",
+      "title": "Exercise 6: Discussion",
+      "icon": "fa-question-circle",
+      "time": 5,
+      "instructions": "Discuss the following questions with your partner or in small groups.",
+      "questions": [
+        "Discussion question 1?",
+        "Discussion question 2?",
+        // Include 10 discussion questions total
+      ],
+      "teacher_tip": "Advice for teachers on how to use this exercise effectively"
+    }
+  ],
+  "vocabulary_sheet": [
+    {"term": "Term 1", "meaning": "Definition of term 1"},
+    {"term": "Term 2", "meaning": "Definition of term 2"},
+    // Include 15 vocabulary items total
+  ]
 }
 \`\`\`
 
-Important requirements:
-1. All exercises must be directly related to the topic and goal
-2. Each exercise should have 8-10 items (questions, matches, etc.)
-3. Include varied exercise types (reading, vocabulary, speaking, etc.)
-4. Vocabulary sheet should have at least 15 important terms/phrases
-5. All teacher tips should be practical and helpful
-6. You must follow the exact JSON structure provided
-7. Use proper escaping for quotes and special characters in JSON
-8. Don't use placeholder comments like "// More questions..." - include actual content
-9. All content should be professional and ready to use in a language classroom
-10. Exercise durations should be appropriate for the activity type
+Important guidelines:
+1. Use the exact JSON structure shown above
+2. For 30-minute lessons, create 4 exercises; for 45-minute lessons, create 6 exercises; for 60-minute lessons, create 8 exercises
+3. Each exercise MUST include exactly 10 questions/items/sentences as appropriate - this is a strict requirement!
+4. All exercises should be closely related to the specified topic and goal
+5. Include specific vocabulary, expressions, and language structures related to the topic
+6. Ensure the vocabulary sheet at the end contains 15 key terms with clear definitions
+7. Keep exercise instructions clear and concise
+8. For each exercise, include a "teacher_tip" with practical advice for conducting the activity
+9. Use the appropriate exercise icon for each type as shown in the examples
 
-Generate a complete worksheet in this JSON format that would be ready to use in a language classroom.
+Make sure the final output is valid JSON format that can be parsed properly. Do not include explanations or commentary outside the JSON structure.
 `;
 
   return prompt;

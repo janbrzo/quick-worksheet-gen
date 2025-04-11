@@ -1,8 +1,14 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { WorksheetView } from '@/types/worksheet';
-import { Download, Edit, Check, FileText, User, Lightbulb } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { 
+  FileDown, 
+  Pencil,
+  Save,
+  UserCheck, 
+  GraduationCap
+} from 'lucide-react';
 
 interface WorksheetToolbarProps {
   viewMode: WorksheetView;
@@ -20,63 +26,57 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
   downloadWorksheet
 }) => {
   return (
-    <div className="sticky top-0 z-30 bg-gradient-to-r from-gray-50 to-white py-4 shadow-sm rounded-lg mb-6">
-      <div className="flex flex-wrap md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="inline-flex p-1 bg-gray-100 border border-gray-200 rounded-xl shadow-sm" role="group">
-          <button
+    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm py-2 px-4 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={viewMode === WorksheetView.STUDENT ? "default" : "outline"}
+            size="sm"
             onClick={() => setWorksheetView(WorksheetView.STUDENT)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-lg flex items-center gap-2 transition-all ${
-              viewMode === WorksheetView.STUDENT 
-                ? 'bg-indigo-500 text-white shadow-md' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-            aria-current={viewMode === WorksheetView.STUDENT ? "page" : undefined}
+            className="flex items-center gap-2"
           >
-            <User size={16} />
-            Student View
-          </button>
-          <button
+            <UserCheck size={16} />
+            <span>Student View</span>
+          </Button>
+          <Button
+            variant={viewMode === WorksheetView.TEACHER ? "default" : "outline"}
+            size="sm"
             onClick={() => setWorksheetView(WorksheetView.TEACHER)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-lg flex items-center gap-2 ml-1 transition-all ${
-              viewMode === WorksheetView.TEACHER 
-                ? 'bg-indigo-500 text-white shadow-md' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-            aria-current={viewMode === WorksheetView.TEACHER ? "page" : undefined}
+            className="flex items-center gap-2"
           >
-            <Lightbulb size={16} />
-            Teacher View
-          </button>
+            <GraduationCap size={16} />
+            <span>Teacher View</span>
+          </Button>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-          <div className="flex items-center bg-amber-50 rounded-md px-4 py-2 text-amber-700 mr-2">
-            <p className="text-sm font-medium">
-              {isEditing 
-                ? "Editing mode enabled. Click on content to edit." 
-                : "Click the Edit button to modify the worksheet →"}
-            </p>
-          </div>
-          
-          <Button 
-            variant={isEditing ? "default" : "outline"}
+        <div className="flex items-center space-x-2">
+          <Button
+            variant={isEditing ? "success" : "outline"}
+            size="sm"
             onClick={handleEditToggle}
-            className={`flex items-center gap-2 whitespace-nowrap ${
-              isEditing 
-                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0' 
-                : 'border-indigo-200 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
-            }`}
-            size="sm"
+            className={`flex items-center gap-2 ${isEditing ? 'bg-green-600 hover:bg-green-700 text-white' : ''}`}
           >
-            {isEditing ? <><Check size={16} /> Save Changes</> : <><Edit size={16} /> Edit Worksheet</>}
+            {isEditing ? (
+              <>
+                <Save size={16} />
+                <span>Save Changes</span>
+              </>
+            ) : (
+              <>
+                <Pencil size={16} />
+                <span>Edit Worksheet</span>
+              </>
+            )}
           </Button>
-          <Button 
-            onClick={downloadWorksheet}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-0 flex items-center gap-2 shadow-md whitespace-nowrap"
+          
+          <Button
+            variant="outline"
             size="sm"
+            onClick={downloadWorksheet}
+            className="flex items-center gap-2"
           >
-            <Download size={16} />
-            Download PDF
+            <FileDown size={16} />
+            <span>Download PDF</span>
           </Button>
         </div>
       </div>

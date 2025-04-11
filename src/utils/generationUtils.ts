@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { FormData, WorksheetData, GenerationStatus, Exercise, VocabularyItem, GenerationStep } from '@/types/worksheet';
 import { generateWithAI } from './api';
@@ -68,7 +67,7 @@ ${data.additionalInfo ? `\nSpecial considerations: ${data.additionalInfo}` : ''}
 }
 
 // Generates vocabulary items for the worksheet
-export function generateVocabulary(data: FormData, count: number): VocabularyItem[] {
+export function generateVocabulary(data: FormData, count: number = 15): VocabularyItem[] {
   const terms = [
     "implementation", "protocol", "framework", "infrastructure", 
     "optimization", "methodology", "integration", "functionality", 
@@ -123,9 +122,10 @@ export function generateVocabulary(data: FormData, count: number): VocabularyIte
     `The scalability of the system allows for future expansion.`
   ];
   
+  const vocabCount = 15;
   const result: VocabularyItem[] = [];
   
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < vocabCount; i++) {
     const termIndex = i % terms.length;
     result.push({
       term: terms[termIndex],
@@ -152,10 +152,10 @@ export function generateExercises(data: FormData, count: number): Exercise[] {
     return {
       title: `Exercise ${i+1}: ${capitalizeFirst(type)} - ${generateExerciseTitle(type, data)}`,
       instructions: generateInstructions(type, data),
-      content: generateExerciseContent(type, data),
+      content: generateExerciseContent(type, data, 10),
       type: type,
       teacherAnswers: generateTeacherAnswers(type, data),
-      duration: timePerExercise // Adding duration in minutes
+      duration: timePerExercise
     };
   });
 }
@@ -210,26 +210,37 @@ export function generateInstructions(type: Exercise['type'], data: FormData): st
 }
 
 // Generate exercise content based on type
-export function generateExerciseContent(type: Exercise['type'], data: FormData): string {
+export function generateExerciseContent(type: Exercise['type'], data: FormData, count: number = 10): string {
   const topic = data.lessonTopic.split(':')[1] || data.lessonTopic;
   const field = data.lessonTopic.split(':')[0] || 'professional';
   
+  // Always ensure we generate exactly 10 items
+  const itemCount = 10;
+  
   switch(type) {
     case 'vocabulary':
-      return generateVocabularyItems(field, topic, 10);
+      return generateVocabularyItems(field, topic, itemCount);
     case 'reading':
-      return generateReadingText(field, topic, 10);
+      return generateReadingText(field, topic, 5) + generateReadingQuestions(field, topic, itemCount);
     case 'writing':
-      return generateWritingPrompts(field, topic, 10);
+      return generateWritingPrompts(field, topic, itemCount);
     case 'speaking':
-      return generateSpeakingQuestions(field, topic, 10);
+      return generateSpeakingQuestions(field, topic, itemCount);
     case 'grammar':
-      return generateGrammarExercise(field, topic, 10);
+      return generateGrammarExercise(field, topic, itemCount);
     case 'listening':
-      return generateListeningExercise(field, topic, 10);
+      return generateListeningExercise(field, topic, itemCount);
     default:
-      return generateGenericExercise(field, topic, 10);
+      return generateGenericExercise(field, topic, itemCount);
   }
+}
+
+// New helper function for reading questions
+export function generateReadingQuestions(field: string, topic: string, count: number): string {
+  return "\n## Comprehension Questions\n\n" + 
+    Array.from({ length: count }, (_, i) => 
+      `${i+1}. Question ${i+1} related to the text about ${topic}?\n`
+    ).join('\n');
 }
 
 // Generate vocabulary items for an exercise
