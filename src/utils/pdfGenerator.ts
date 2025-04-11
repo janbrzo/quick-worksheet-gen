@@ -11,13 +11,14 @@ interface PdfGenerationOptions {
   contentRef: RefType;
   viewMode: WorksheetView;
   vocabulary?: any[];
+  skipVocabularyPage?: boolean; // Add this property to fix the type error
 }
 
 /**
  * Generates a PDF from the given content reference
  */
 export async function generatePdf(options: PdfGenerationOptions): Promise<string | null> {
-  const { title, contentRef, viewMode, vocabulary } = options;
+  const { title, contentRef, viewMode, vocabulary, skipVocabularyPage } = options;
   
   try {
     if (!contentRef.current) {
@@ -97,8 +98,8 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
       }
     }
     
-    // Add vocabulary on a separate page if available
-    if (vocabulary && vocabulary.length > 0) {
+    // Add vocabulary on a separate page if available and not skipped
+    if (vocabulary && vocabulary.length > 0 && !skipVocabularyPage) {
       pdf.addPage();
       addVocabularyPage(pdf, vocabulary);
     }
