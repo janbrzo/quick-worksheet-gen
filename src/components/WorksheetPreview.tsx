@@ -93,12 +93,8 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       // Use setTimeout to allow React to re-render with export mode
       setTimeout(async () => {
         try {
-          // Display processing message for specific view
-          if (viewMode === WorksheetView.STUDENT) {
-            toast.success('Your STUDENT worksheet is being prepared for download');
-          } else {
-            toast.success('Your TEACHER worksheet is being prepared for download');
-          }
+          // Display processing message
+          toast.success(`Preparing ${viewMode === WorksheetView.STUDENT ? 'STUDENT' : 'TEACHER'} worksheet for download...`);
           
           // Get current view content ref
           const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
@@ -108,13 +104,15 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
             title: data.title,
             contentRef,
             viewMode,
-            vocabulary: [], // Don't include vocabulary twice (it's already in the worksheet content)
-            skipVocabularyPage: true, // Skip the extra vocabulary page
+            vocabulary: [], // Don't include vocabulary twice
+            skipVocabularyPage: true,
             isExportMode: true
           });
           
           if (filename) {
-            // Also generate the other view
+            toast.success(`${viewMode === WorksheetView.STUDENT ? 'Student' : 'Teacher'} worksheet downloaded successfully!`);
+            
+            // Also generate the other view after a delay
             setTimeout(() => {
               downloadOtherView();
             }, 1000);
@@ -127,7 +125,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
           toast.error("Error downloading worksheet. Please try again.");
           setIsExportMode(false);
         }
-      }, 100);
+      }, 200); // Increased timeout to ensure DOM updates
     } catch (err) {
       console.error("Download error:", err);
       toast.error("Error downloading worksheet. Please try again.");
@@ -148,7 +146,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       
       // Display processing message for other view
       const viewName = otherView === WorksheetView.STUDENT ? "STUDENT" : "TEACHER";
-      toast.success(`Your ${viewName} worksheet is also being prepared for download`);
+      toast.success(`Preparing ${viewName} worksheet for download...`);
       
       // Generate PDF for other view with export mode enabled
       const filename = await generatePdf({
@@ -165,6 +163,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       }
     } catch (err) {
       console.error("Download error for other view:", err);
+      toast.error("Error with second worksheet. Please try downloading each view separately.");
     }
   };
   

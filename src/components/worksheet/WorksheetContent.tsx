@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { 
@@ -33,7 +32,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
   subtitle,
   introduction
 }) => {
-  // Function to get the appropriate icon for exercise type
+  // Helper function to get the appropriate icon for exercise type
   const getExerciseIcon = (type: string) => {
     switch (type) {
       case 'reading':
@@ -112,14 +111,18 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       case 'matching':
       case 'vocabulary':
         {
-          // For student view, shuffle the items
-          let displayItems = exercise.items || [];
+          // Always create a copy of the items to avoid modifying the original
+          let displayItems = [...(exercise.items || [])];
+          
+          // Create terms array (always keep original order for the left column)
           let terms = displayItems.map(item => ({ term: item.term, isOriginal: true }));
           
-          // For student view, shuffle the items, but keep original order for teacher view
-          const shuffledDefinitions = viewMode === WorksheetView.STUDENT
-            ? shuffleArray(displayItems.map(item => ({ definition: item.definition, originalIndex: displayItems.findIndex(d => d.definition === item.definition) })))
-            : displayItems.map((item, index) => ({ definition: item.definition, originalIndex: index }));
+          // For both student and teacher view, shuffle the definitions
+          const shuffledDefinitions = shuffleArray(displayItems.map(item => ({ 
+            definition: item.definition, 
+            originalIndex: displayItems.findIndex(d => d.definition === item.definition),
+            term: item.term // Keep track of which term this definition belongs to
+          })));
           
           // Generate letter labels
           const letterLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
@@ -147,10 +150,9 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
                 </div>
                 {terms.map((item, idx) => {
                   // Find the correct definition for this term
-                  const correctDefinitionIndex = displayItems.findIndex(d => d.term === item.term);
-                  // Find the shuffled position to get the correct letter
-                  const shuffledPosition = shuffledDefinitions.findIndex(d => d.originalIndex === correctDefinitionIndex);
-                  const correctLetter = letterLabels[shuffledPosition];
+                  const correctDefinitionIndex = shuffledDefinitions.findIndex(d => d.term === item.term);
+                  // Get the correct letter
+                  const correctLetter = letterLabels[correctDefinitionIndex];
                   
                   return (
                     <div key={`answer-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
@@ -189,13 +191,13 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       
       case 'fill-in-blanks':
         {
-          // Randomize word bank order for the student view
-          const randomizedWordBank = viewMode === WorksheetView.STUDENT && exercise.word_bank 
+          // Always randomize word bank order for both views to ensure it's not in the same order as sentences
+          const randomizedWordBank = exercise.word_bank 
             ? shuffleArray([...exercise.word_bank]) 
             : exercise.word_bank;
           
-          // Randomize sentences for the student view
-          const randomizedSentences = viewMode === WorksheetView.STUDENT && exercise.sentences 
+          // Always shuffle sentences for both views to break predictable patterns
+          const randomizedSentences = exercise.sentences 
             ? shuffleArray([...exercise.sentences]) 
             : exercise.sentences;
             

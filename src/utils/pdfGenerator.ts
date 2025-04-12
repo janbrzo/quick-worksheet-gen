@@ -48,86 +48,129 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     const pdfHeight = 297;
     const margin = 15;
     
-    // Create canvas with optimized settings for better quality-to-size ratio
-    const canvas = await html2canvas(contentClone, {
-      scale: 1.5, // Lower scale for smaller file size while maintaining reasonable quality
-      useCORS: true,
-      logging: false,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      imageTimeout: 0,
-      removeContainer: true,
-      // Optimize images for better compression
-      onclone: (document, element) => {
-        const images = element.querySelectorAll('img');
-        images.forEach(img => {
-          img.style.maxWidth = '100%';
-          img.style.height = 'auto';
-        });
-        return element;
-      }
-    });
-    
-    // Calculate content dimensions with margins
-    const contentWidth = pdfWidth - (2 * margin);
-    const contentHeight = (canvas.height * contentWidth) / canvas.width;
-    
-    // Calculate how many full pages we need
-    const pageCount = Math.ceil(contentHeight / (pdfHeight - (2 * margin)));
-    
-    // Add content page by page
-    for (let i = 0; i < pageCount; i++) {
-      if (i > 0) {
-        pdf.addPage();
-      }
+    try {
+      // Create canvas with optimized settings for better quality
+      const canvas = await html2canvas(contentClone, {
+        scale: 2, // Higher quality, but still optimized
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        removeContainer: true
+      });
       
-      // Calculate which portion of the canvas to use for this page
-      const sourceY = i * ((pdfHeight - (2 * margin)) * canvas.width / contentWidth);
-      const sourceHeight = Math.min(
-        ((pdfHeight - (2 * margin)) * canvas.width / contentWidth),
-        canvas.height - sourceY
-      );
+      // Calculate content dimensions with margins
+      const contentWidth = pdfWidth - (2 * margin);
+      const canvasAspectRatio = canvas.height / canvas.width;
+      const contentHeight = contentWidth * canvasAspectRatio;
       
-      // Only add page content if there's actual content to add
-      if (sourceHeight > 0) {
-        // Create a temporary canvas for this page slice
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = sourceHeight;
-        
-        // Draw the portion of the original canvas onto this temp canvas
-        const ctx = tempCanvas.getContext('2d');
-        ctx!.drawImage(
-          canvas, 
-          0, sourceY, canvas.width, sourceHeight,
-          0, 0, canvas.width, sourceHeight
+      // If content fits on one page
+      if (contentHeight <= pdfHeight - (2 * margin)) {
+        // Add the entire canvas as a single image
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(
+          imgData,
+          'JPEG',
+          margin,
+          margin,
+          contentWidth,
+          contentHeight
         );
+      } else {
+        // Content needs multiple pages
+        let pageCount = Math.ceil(contentHeight / (pdfHeight - (2 * margin)));
+        let positionY = 0;
         
-        // Add this slice to the PDF with compression
-        const imgData = tempCanvas.toDataURL('image/jpeg', 0.85); // Use JPEG with compression
-        const sliceHeight = (sourceHeight * contentWidth) / canvas.width;
+        for (let i = 0; i < pageCount; i++) {
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          // Calculate portion of canvas for this page
+          const pageHeightPx = (pdfHeight - (2 * margin)) / contentWidth * canvas.width;
+          const sourceY = i * pageHeightPx;
+          const remainingHeight = canvas.height - sourceY;
+          const sourceHeight = Math.min(pageHeightPx, remainingHeight);
+          
+          // Create a temporary canvas for this page slice
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = canvas.width;
+          tempCanvas.height = sourceHeight;
+          
+          // Draw portion of the original canvas onto this temp canvas
+          const ctx = tempCanvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(
+              canvas, 
+              0, sourceY, canvas.width, sourceHeight,
+              0, 0, canvas.width, sourceHeight
+            );
+            
+            // Add this slice to the PDF with compression
+            const imgData = tempCanvas.toDataURL('image/jpeg', 0.92);
+            const sliceHeight = (sourceHeight / canvas.width) * contentWidth;
+            
+            pdf.addImage(
+              imgData,
+              'JPEG',
+              margin, 
+              margin,
+              contentWidth, 
+              sliceHeight
+            );
+          }
+        }
+      }
+      
+      // Add vocabulary on a separate page if available and not skipped
+      if (vocabulary && vocabulary.length > 0 && !skipVocabularyPage) {
+        pdf.addPage();
+        addVocabularyPage(pdf, vocabulary);
+      }
+      
+      // Save PDF file
+      pdf.save(filename);
+      return filename;
+    } catch (canvasError) {
+      console.error("Canvas error:", canvasError);
+      
+      // Fallback to simplified PDF generation
+      try {
+        const simpleClone = contentClone.cloneNode(true) as HTMLElement;
+        // Remove complex elements that might cause errors
+        const complexElements = simpleClone.querySelectorAll('canvas, svg, img');
+        complexElements.forEach(el => {
+          const replacement = document.createElement('div');
+          replacement.textContent = '[Image content]';
+          el.parentNode?.replaceChild(replacement, el);
+        });
+        
+        const simpleCanvas = await html2canvas(simpleClone, {
+          scale: 1.5,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+        
+        const imgData = simpleCanvas.toDataURL('image/jpeg', 0.9);
+        const contentWidth = pdfWidth - (2 * margin);
+        const contentHeight = contentWidth * (simpleCanvas.height / simpleCanvas.width);
         
         pdf.addImage(
           imgData,
           'JPEG',
-          margin, 
           margin,
-          contentWidth, 
-          sliceHeight
+          margin,
+          contentWidth,
+          contentHeight
         );
+        
+        pdf.save(filename);
+        return filename;
+      } catch (fallbackError) {
+        console.error("Fallback PDF generation error:", fallbackError);
+        throw fallbackError;
       }
     }
-    
-    // Add vocabulary on a separate page if available and not skipped
-    if (vocabulary && vocabulary.length > 0 && !skipVocabularyPage) {
-      pdf.addPage();
-      addVocabularyPage(pdf, vocabulary);
-    }
-    
-    // Save PDF with optimized output
-    pdf.save(filename);
-    return filename;
-    
   } catch (err) {
     console.error("Download error:", err);
     toast.error("Error downloading worksheet. Please try again.");
@@ -169,6 +212,18 @@ function cleanupForExport(element: HTMLElement): void {
   const editBackgrounds = element.querySelectorAll('.bg-amber-50\\/30');
   editBackgrounds.forEach(el => {
     el.classList.remove('bg-amber-50/30');
+  });
+  
+  // Remove any buttons or interactive controls
+  const buttons = element.querySelectorAll('button');
+  buttons.forEach(button => button.remove());
+  
+  // Ensure all inputs are converted to static text
+  const inputs = element.querySelectorAll('input:not([type="checkbox"])');
+  inputs.forEach(input => {
+    const value = (input as HTMLInputElement).value || "";
+    const textNode = document.createTextNode(value);
+    input.parentNode?.replaceChild(textNode, input);
   });
 }
 
