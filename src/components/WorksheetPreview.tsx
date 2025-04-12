@@ -40,6 +40,9 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   const [editableSubtitle, setEditableSubtitle] = useState(data.subtitle || "");
   const [editableIntroduction, setEditableIntroduction] = useState(data.introduction || "");
   
+  // State for export mode (used when generating PDFs)
+  const [isExportMode, setIsExportMode] = useState(false);
+  
   // State for feedback dialog
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({ rating: 0, comment: '' });
@@ -84,34 +87,51 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         return;
       }
       
-      // Display processing message for specific view
-      if (viewMode === WorksheetView.STUDENT) {
-        toast.success('Your STUDENT worksheet is being prepared for download');
-      } else {
-        toast.success('Your TEACHER worksheet is being prepared for download');
-      }
+      // Enable export mode for PDF generation
+      setIsExportMode(true);
       
-      // Get current view content ref
-      const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
-      
-      // Generate PDF for current view
-      const filename = await generatePdf({
-        title: data.title,
-        contentRef,
-        viewMode,
-        vocabulary: [], // Don't include vocabulary twice (it's already in the worksheet content)
-        skipVocabularyPage: true // Skip the extra vocabulary page
-      });
-      
-      if (filename) {
-        // Also generate the other view
-        setTimeout(() => {
-          downloadOtherView();
-        }, 1000);
-      }
+      // Use setTimeout to allow React to re-render with export mode
+      setTimeout(async () => {
+        try {
+          // Display processing message for specific view
+          if (viewMode === WorksheetView.STUDENT) {
+            toast.success('Your STUDENT worksheet is being prepared for download');
+          } else {
+            toast.success('Your TEACHER worksheet is being prepared for download');
+          }
+          
+          // Get current view content ref
+          const contentRef = viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
+          
+          // Generate PDF for current view with export mode enabled
+          const filename = await generatePdf({
+            title: data.title,
+            contentRef,
+            viewMode,
+            vocabulary: [], // Don't include vocabulary twice (it's already in the worksheet content)
+            skipVocabularyPage: true, // Skip the extra vocabulary page
+            isExportMode: true
+          });
+          
+          if (filename) {
+            // Also generate the other view
+            setTimeout(() => {
+              downloadOtherView();
+            }, 1000);
+          }
+          
+          // Disable export mode after PDF generation
+          setIsExportMode(false);
+        } catch (err) {
+          console.error("Download error:", err);
+          toast.error("Error downloading worksheet. Please try again.");
+          setIsExportMode(false);
+        }
+      }, 100);
     } catch (err) {
       console.error("Download error:", err);
       toast.error("Error downloading worksheet. Please try again.");
+      setIsExportMode(false);
     }
   };
   
@@ -130,13 +150,14 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
       const viewName = otherView === WorksheetView.STUDENT ? "STUDENT" : "TEACHER";
       toast.success(`Your ${viewName} worksheet is also being prepared for download`);
       
-      // Generate PDF for other view
+      // Generate PDF for other view with export mode enabled
       const filename = await generatePdf({
         title: data.title,
         contentRef: otherContentRef,
         viewMode: otherView,
         vocabulary: [], // Don't include vocabulary twice
-        skipVocabularyPage: true
+        skipVocabularyPage: true,
+        isExportMode: true
       });
       
       if (filename) {
@@ -170,10 +191,73 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
           <h2 className="text-lg font-bold text-edu-dark">{data.title}</h2>
         </div>
 
+        {/* Render invisible content refs for both views to enable PDF generation */}
         <div 
-          ref={viewMode === WorksheetView.STUDENT ? studentContentRef : teacherContentRef} 
-          className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6"
+          ref={studentContentRef} 
+          className={viewMode === WorksheetView.STUDENT ? "" : "hidden"}
         >
+          {!isEditing ? (
+            <WorksheetContent 
+              content={editableContent}
+              exercises={editableExercises}
+              vocabulary={data.vocabulary || []}
+              viewMode={WorksheetView.STUDENT}
+              isEditing={false}
+              isExportMode={isExportMode}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
+            />
+          ) : (
+            <WorksheetEditor
+              content={editableContent}
+              exercises={editableExercises}
+              viewMode={WorksheetView.STUDENT}
+              onContentChange={setEditableContent}
+              onExerciseChange={handleEditExercise}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
+              onSubtitleChange={setEditableSubtitle}
+              onIntroductionChange={setEditableIntroduction}
+              isEditing={isEditing}
+              onSaveChanges={handleEditToggle}
+            />
+          )}
+        </div>
+
+        <div 
+          ref={teacherContentRef} 
+          className={viewMode === WorksheetView.TEACHER ? "" : "hidden"}
+        >
+          {!isEditing ? (
+            <WorksheetContent 
+              content={editableContent}
+              exercises={editableExercises}
+              vocabulary={data.vocabulary || []}
+              viewMode={WorksheetView.TEACHER}
+              isEditing={false}
+              isExportMode={isExportMode}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
+            />
+          ) : (
+            <WorksheetEditor
+              content={editableContent}
+              exercises={editableExercises}
+              viewMode={WorksheetView.TEACHER}
+              onContentChange={setEditableContent}
+              onExerciseChange={handleEditExercise}
+              subtitle={editableSubtitle}
+              introduction={editableIntroduction}
+              onSubtitleChange={setEditableSubtitle}
+              onIntroductionChange={setEditableIntroduction}
+              isEditing={isEditing}
+              onSaveChanges={handleEditToggle}
+            />
+          )}
+        </div>
+
+        {/* Visible content display (student or teacher) */}
+        <div className="border border-gray-200 rounded-lg p-6 bg-white min-h-[60vh] mb-6">
           {!isEditing ? (
             <WorksheetContent 
               content={editableContent}
@@ -181,6 +265,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
               vocabulary={data.vocabulary || []}
               viewMode={viewMode}
               isEditing={false}
+              isExportMode={false}
               subtitle={editableSubtitle}
               introduction={editableIntroduction}
             />

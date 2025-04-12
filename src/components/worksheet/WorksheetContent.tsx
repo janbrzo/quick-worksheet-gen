@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Clock
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface WorksheetContentProps {
   content: string;
@@ -17,6 +18,7 @@ interface WorksheetContentProps {
   vocabulary: VocabularyItem[];
   viewMode: WorksheetView;
   isEditing: boolean;
+  isExportMode?: boolean;
   subtitle?: string;
   introduction?: string;
 }
@@ -27,6 +29,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
   vocabulary, 
   viewMode,
   isEditing,
+  isExportMode = false,
   subtitle,
   introduction
 }) => {
@@ -122,9 +125,9 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
           const letterLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
           
           return (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               {/* Left column: Terms (narrower) */}
-              <div className="space-y-3">
+              <div className="col-span-1 space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Terms
                 </div>
@@ -137,8 +140,8 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
                 ))}
               </div>
               
-              {/* Middle column: Answers (only visible in teacher view) */}
-              <div className="space-y-3">
+              {/* Middle column: Answers (input field) */}
+              <div className="col-span-1 space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Answers
                 </div>
@@ -151,16 +154,22 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
                   
                   return (
                     <div key={`answer-${idx}`} className="flex items-center p-3 border border-gray-200 bg-slate-50 rounded-md">
-                      <div className={`font-semibold ${viewMode === WorksheetView.TEACHER ? 'text-emerald-600' : 'text-gray-300'}`}>
-                        {viewMode === WorksheetView.TEACHER ? correctLetter : '_____'}
-                      </div>
+                      {viewMode === WorksheetView.TEACHER ? (
+                        <div className="font-semibold text-emerald-600 text-center w-full">
+                          {correctLetter}
+                        </div>
+                      ) : (
+                        <div className="font-semibold text-gray-300 text-center w-full">
+                          {isExportMode ? "____" : "_____"}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
               </div>
               
-              {/* Right column: Definitions */}
-              <div className="space-y-3">
+              {/* Right column: Definitions (spanning 2 columns) */}
+              <div className="col-span-2 space-y-3">
                 <div className="bg-indigo-50 px-3 py-2 rounded-md font-medium text-indigo-700 text-sm">
                   Definitions
                 </div>
@@ -232,9 +241,15 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
                       key={oIdx} 
                       className={`p-2 border rounded-md flex items-center gap-2 ${option.correct && viewMode === WorksheetView.TEACHER ? 'border-emerald-300 bg-emerald-50' : 'border-gray-200'}`}
                     >
-                      <div className={`w-5 h-5 flex-shrink-0 rounded border ${option.correct && viewMode === WorksheetView.TEACHER ? 'border-emerald-500 bg-emerald-100 text-emerald-700' : 'border-gray-400'} flex items-center justify-center text-xs`}>
-                        {option.correct && viewMode === WorksheetView.TEACHER ? "✓" : option.label}
-                      </div>
+                      {isExportMode ? (
+                        <div className={`w-5 h-5 flex-shrink-0 rounded border text-center leading-5 ${option.correct && viewMode === WorksheetView.TEACHER ? 'border-emerald-500 bg-emerald-100 text-emerald-700' : 'border-gray-400'}`}>
+                          {option.correct && viewMode === WorksheetView.TEACHER ? "✓" : option.label}
+                        </div>
+                      ) : (
+                        <div className={`w-5 h-5 flex-shrink-0 rounded border ${option.correct && viewMode === WorksheetView.TEACHER ? 'border-emerald-500 bg-emerald-100 text-emerald-700' : 'border-gray-400'} flex items-center justify-center text-xs`}>
+                          {option.correct && viewMode === WorksheetView.TEACHER ? "✓" : option.label}
+                        </div>
+                      )}
                       <span className="text-sm">{option.text}</span>
                     </div>
                   ))}
@@ -290,7 +305,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isExportMode ? 'export-mode' : ''}`}>
       {/* Introduction section */}
       {(subtitle || introduction) && (
         <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-md mb-6">

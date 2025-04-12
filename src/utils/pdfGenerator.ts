@@ -11,14 +11,15 @@ interface PdfGenerationOptions {
   contentRef: RefType;
   viewMode: WorksheetView;
   vocabulary?: any[];
-  skipVocabularyPage?: boolean; // Add this property to fix the type error
+  skipVocabularyPage?: boolean;
+  isExportMode?: boolean;
 }
 
 /**
  * Generates a PDF from the given content reference
  */
 export async function generatePdf(options: PdfGenerationOptions): Promise<string | null> {
-  const { title, contentRef, viewMode, vocabulary, skipVocabularyPage } = options;
+  const { title, contentRef, viewMode, vocabulary, skipVocabularyPage, isExportMode = false } = options;
   
   try {
     if (!contentRef.current) {
@@ -31,22 +32,41 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     const baseFilename = `worksheet-${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
     const filename = `${baseFilename}-${viewSuffix}.pdf`;
     
-    // Create PDF with single canvas approach (more reliable for complex layouts)
+    // Create a clone of the content for export to avoid modifying the original DOM
+    const contentClone = contentRef.current.cloneNode(true) as HTMLElement;
+    
+    // Clean up contentEditable and other interactive elements for export
+    if (isExportMode) {
+      cleanupForExport(contentClone);
+    }
+    
+    // Create PDF with optimized settings
     const pdf = new jsPDF('p', 'mm', 'a4');
     
-    // Render the entire content as one image
-    const canvas = await html2canvas(contentRef.current, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true,
-      logging: false,
-      allowTaint: true,
-      backgroundColor: '#ffffff'
-    });
-
     // PDF dimensions (A4)
     const pdfWidth = 210;
     const pdfHeight = 297;
     const margin = 15;
+    
+    // Create canvas with optimized settings for better quality-to-size ratio
+    const canvas = await html2canvas(contentClone, {
+      scale: 1.5, // Lower scale for smaller file size while maintaining reasonable quality
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      imageTimeout: 0,
+      removeContainer: true,
+      // Optimize images for better compression
+      onclone: (document, element) => {
+        const images = element.querySelectorAll('img');
+        images.forEach(img => {
+          img.style.maxWidth = '100%';
+          img.style.height = 'auto';
+        });
+        return element;
+      }
+    });
     
     // Calculate content dimensions with margins
     const contentWidth = pdfWidth - (2 * margin);
@@ -83,13 +103,13 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
           0, 0, canvas.width, sourceHeight
         );
         
-        // Add this slice to the PDF
-        const imgData = tempCanvas.toDataURL('image/png');
+        // Add this slice to the PDF with compression
+        const imgData = tempCanvas.toDataURL('image/jpeg', 0.85); // Use JPEG with compression
         const sliceHeight = (sourceHeight * contentWidth) / canvas.width;
         
         pdf.addImage(
           imgData,
-          'PNG',
+          'JPEG',
           margin, 
           margin,
           contentWidth, 
@@ -104,7 +124,7 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
       addVocabularyPage(pdf, vocabulary);
     }
     
-    // Save PDF
+    // Save PDF with optimized output
     pdf.save(filename);
     return filename;
     
@@ -113,6 +133,43 @@ export async function generatePdf(options: PdfGenerationOptions): Promise<string
     toast.error("Error downloading worksheet. Please try again.");
     return null;
   }
+}
+
+/**
+ * Cleans up the content for export by removing contentEditable attributes
+ * and converting interactive elements to static representations
+ */
+function cleanupForExport(element: HTMLElement): void {
+  // Remove all contentEditable attributes
+  const editableElements = element.querySelectorAll('[contenteditable]');
+  editableElements.forEach(el => {
+    el.removeAttribute('contenteditable');
+    
+    // Remove editing-related classes
+    el.classList.remove(
+      'border', 'border-amber-200', 'focus:border-amber-400', 
+      'focus:ring-2', 'focus:ring-amber-200', 'hover:bg-amber-50/30',
+      'editable-content'
+    );
+  });
+  
+  // Convert checkboxes to text representations
+  const checkboxes = element.querySelectorAll('input[type="checkbox"]');
+  checkboxes.forEach(checkbox => {
+    const isChecked = (checkbox as HTMLInputElement).checked;
+    const textNode = document.createTextNode(isChecked ? '✓' : '☐');
+    checkbox.parentNode?.replaceChild(textNode, checkbox);
+  });
+  
+  // Remove any "edit mode" related elements
+  const editModeElements = element.querySelectorAll('.editable-mode, .edit-controls');
+  editModeElements.forEach(el => el.remove());
+  
+  // Remove any background colors specific to editing
+  const editBackgrounds = element.querySelectorAll('.bg-amber-50\\/30');
+  editBackgrounds.forEach(el => {
+    el.classList.remove('bg-amber-50/30');
+  });
 }
 
 /**
