@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Exercise, VocabularyItem, WorksheetView } from '@/types/worksheet';
 import { 
@@ -9,7 +10,6 @@ import {
   MessageSquare,
   Clock
 } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface WorksheetContentProps {
   content: string;
@@ -112,15 +112,15 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       case 'vocabulary':
         {
           // Always create a copy of the items to avoid modifying the original
-          let displayItems = [...(exercise.items || [])];
+          const items = [...(exercise.items || [])];
           
-          // Create terms array (always keep original order for the left column)
-          let terms = displayItems.map(item => ({ term: item.term, isOriginal: true }));
+          // Create terms array (always in original order for the left column)
+          const terms = items.map(item => ({ term: item.term }));
           
-          // For both student and teacher view, shuffle the definitions
-          const shuffledDefinitions = shuffleArray(displayItems.map(item => ({ 
+          // Always randomize the definitions for both student and teacher view
+          const shuffledDefinitions = shuffleArray(items.map(item => ({ 
             definition: item.definition, 
-            originalIndex: displayItems.findIndex(d => d.definition === item.definition),
+            originalIndex: items.findIndex(d => d.definition === item.definition),
             term: item.term // Keep track of which term this definition belongs to
           })));
           
@@ -191,12 +191,12 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
       
       case 'fill-in-blanks':
         {
-          // Always randomize word bank order for both views to ensure it's not in the same order as sentences
+          // Always randomize word bank order for both views
           const randomizedWordBank = exercise.word_bank 
             ? shuffleArray([...exercise.word_bank]) 
             : exercise.word_bank;
           
-          // Always shuffle sentences for both views to break predictable patterns
+          // Always randomize sentences for both views
           const randomizedSentences = exercise.sentences 
             ? shuffleArray([...exercise.sentences]) 
             : exercise.sentences;
@@ -347,7 +347,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
               {renderExerciseContent(exercise)}
               
               {/* Teacher view only content */}
-              {viewMode === WorksheetView.TEACHER && exercise.teacher_tip && (
+              {viewMode === WorksheetView.TEACHER && (exercise.teacher_tip || exercise.teacherAnswers) && (
                 <div className="mt-6 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
                   <h4 className="text-blue-800 font-medium flex items-center gap-2 mb-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -356,7 +356,7 @@ const WorksheetContent: React.FC<WorksheetContentProps> = ({
                     </svg>
                     Teacher Tip
                   </h4>
-                  <p className="text-blue-800 text-sm">{exercise.teacher_tip}</p>
+                  <p className="text-blue-800 text-sm">{exercise.teacher_tip || exercise.teacherAnswers}</p>
                 </div>
               )}
             </div>

@@ -50,11 +50,11 @@ const buildJsonPrompt = (params: FormData): string => {
   
   // Build the prompt using the template provided
   let prompt = `
-You are an expert English language teacher creating a specific, high-quality worksheet.
+You are an expert English language teacher creating a specific, high-quality worksheet for one-on-one lessons.
 Create a professional, context-specific, structured, comprehensive English language worksheet that is ready to use immediately.
 Worksheet is for a ${formattedDuration} lesson.
-The worksheet must contain ${exerciseCount} exercises suitable for the given time frame.
-Each exercise must include EXACTLY 10 questions/items/sentences as appropriate.
+The worksheet must contain EXACTLY ${exerciseCount} exercises suitable for the given time frame.
+Each exercise must include EXACTLY 10 questions/items/sentences as appropriate. This is critical - every exercise must have 10 items.
 
 TOPIC: ${sanitizeInput(lessonTopic)}
 GOAL: ${sanitizeInput(lessonObjective)}
@@ -125,7 +125,7 @@ Your response must be in JSON format with the following structure:
       "icon": "fa-pencil-alt",
       "time": 8,
       "instructions": "Complete each sentence with the correct word from the box.",
-      "word_bank": ["word1", "word2", "word3", "word4", "word5", "word6", "word7", "word8", "word9", "word10"],
+      "word_bank": ["word7", "word2", "word9", "word4", "word1", "word6", "word3", "word8", "word5", "word10"],
       "sentences": [
         {"text": "Sentence with a _____ to fill.", "answer": "word1"},
         {"text": "Another sentence with a _____ to fill.", "answer": "word2"},
@@ -245,7 +245,7 @@ Your response must be in JSON format with the following structure:
       "title": "Exercise 5: Speaking Practice",
       "icon": "fa-comments",
       "time": 10,
-      "instructions": "Practice the following dialogue with a partner. Then create your own similar conversation.",
+      "instructions": "Practice the following dialogue with your student. Then create a similar conversation together.",
       "dialogue": [
         {"speaker": "Person A", "text": "First line of dialogue"},
         {"speaker": "Person B", "text": "Response to first line"},
@@ -268,7 +268,7 @@ Your response must be in JSON format with the following structure:
       "title": "Exercise 6: Discussion",
       "icon": "fa-question-circle",
       "time": 5,
-      "instructions": "Discuss the following questions with your partner or in small groups.",
+      "instructions": "Discuss the following questions with your student.",
       "questions": [
         "Discussion question 1?",
         "Discussion question 2?",
@@ -285,28 +285,28 @@ Your response must be in JSON format with the following structure:
     }
   ],
   "vocabulary_sheet": [
-    {"term": "Term 1", "meaning": "Definition of term 1"},
-    {"term": "Term 2", "meaning": "Definition of term 2"},
-    {"term": "Term 3", "meaning": "Definition of term 3"},
-    {"term": "Term 4", "meaning": "Definition of term 4"},
-    {"term": "Term 5", "meaning": "Definition of term 5"},
-    {"term": "Term 6", "meaning": "Definition of term 6"},
-    {"term": "Term 7", "meaning": "Definition of term 7"},
-    {"term": "Term 8", "meaning": "Definition of term 8"},
-    {"term": "Term 9", "meaning": "Definition of term 9"},
-    {"term": "Term 10", "meaning": "Definition of term 10"},
-    {"term": "Term 11", "meaning": "Definition of term 11"},
-    {"term": "Term 12", "meaning": "Definition of term 12"},
-    {"term": "Term 13", "meaning": "Definition of term 13"},
-    {"term": "Term 14", "meaning": "Definition of term 14"},
-    {"term": "Term 15", "meaning": "Definition of term 15"}
+    {"term": "Term 1", "definition": "Definition of term 1", "example": "Example sentence 1"},
+    {"term": "Term 2", "definition": "Definition of term 2", "example": "Example sentence 2"},
+    {"term": "Term 3", "definition": "Definition of term 3", "example": "Example sentence 3"},
+    {"term": "Term 4", "definition": "Definition of term 4", "example": "Example sentence 4"},
+    {"term": "Term 5", "definition": "Definition of term 5", "example": "Example sentence 5"},
+    {"term": "Term 6", "definition": "Definition of term 6", "example": "Example sentence 6"},
+    {"term": "Term 7", "definition": "Definition of term 7", "example": "Example sentence 7"},
+    {"term": "Term 8", "definition": "Definition of term 8", "example": "Example sentence 8"},
+    {"term": "Term 9", "definition": "Definition of term 9", "example": "Example sentence 9"},
+    {"term": "Term 10", "definition": "Definition of term 10", "example": "Example sentence 10"},
+    {"term": "Term 11", "definition": "Definition of term 11", "example": "Example sentence 11"},
+    {"term": "Term 12", "definition": "Definition of term 12", "example": "Example sentence 12"},
+    {"term": "Term 13", "definition": "Definition of term 13", "example": "Example sentence 13"},
+    {"term": "Term 14", "definition": "Definition of term 14", "example": "Example sentence 14"},
+    {"term": "Term 15", "definition": "Definition of term 15", "example": "Example sentence 15"}
   ]
 }
 \`\`\`
 
 Important guidelines:
 1. Use the exact JSON structure shown above
-2. For 30-minute lessons, create EXACTLY 4 exercises; for 45-minute lessons, create EXACTLY 6 exercises; for 60-minute lessons, create EXACTLY 8 exercises
+2. For 30-minute lessons, create EXACTLY ${exerciseCount} exercises
 3. Each exercise MUST include EXACTLY 10 questions/items/sentences as appropriate - no more, no less
 4. All exercises should be closely related to the specified topic and goal
 5. Include specific vocabulary, expressions, and language structures related to the topic
@@ -315,6 +315,7 @@ Important guidelines:
 8. For each exercise, include a "teacher_tip" with practical advice for conducting the activity
 9. Use the appropriate exercise icon for each type as shown in the examples
 10. DO NOT include placeholder comments like "// Include X items total" - actually provide all required items
+11. Make sure all content is appropriate for one-on-one lessons, not group activities
 
 Make sure the final output is valid JSON format that can be parsed properly. Do not include explanations or commentary outside the JSON structure.
 `;
@@ -362,7 +363,7 @@ export const generateWorksheetWithAI = async (params: FormData): Promise<any> =>
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert educational content creator for English language teaching with extensive experience creating worksheets. Create professional, well-structured teaching materials in valid JSON format exactly as requested, with no additional text outside the JSON.' 
+            content: 'You are an expert educational content creator for English language teaching with extensive experience creating worksheets for one-on-one lessons. Create professional, well-structured teaching materials in valid JSON format exactly as requested, with no additional text outside the JSON. Every exercise MUST have EXACTLY 10 items.' 
           },
           { role: 'user', content: prompt }
         ],
@@ -397,6 +398,31 @@ export const generateWorksheetWithAI = async (params: FormData): Promise<any> =>
     // Try to parse the JSON
     try {
       const parsedJson = JSON.parse(jsonContent);
+      
+      // Validate that each exercise has exactly 10 items
+      parsedJson.exercises.forEach(exercise => {
+        if (exercise.questions && exercise.questions.length !== 10) {
+          console.warn(`Exercise "${exercise.title}" has ${exercise.questions.length} questions instead of 10`);
+        }
+        if (exercise.items && exercise.items.length !== 10) {
+          console.warn(`Exercise "${exercise.title}" has ${exercise.items.length} items instead of 10`);
+        }
+        if (exercise.sentences && exercise.sentences.length !== 10) {
+          console.warn(`Exercise "${exercise.title}" has ${exercise.sentences.length} sentences instead of 10`);
+        }
+        if (exercise.word_bank && exercise.word_bank.length !== 10) {
+          console.warn(`Exercise "${exercise.title}" has ${exercise.word_bank.length} words in word bank instead of 10`);
+        }
+        if (exercise.expressions && exercise.expressions.length !== 10) {
+          console.warn(`Exercise "${exercise.title}" has ${exercise.expressions.length} expressions instead of 10`);
+        }
+      });
+      
+      // Validate vocabulary has exactly 15 items
+      if (parsedJson.vocabulary_sheet && parsedJson.vocabulary_sheet.length !== 15) {
+        console.warn(`Vocabulary sheet has ${parsedJson.vocabulary_sheet.length} items instead of 15`);
+      }
+      
       return parsedJson;
     } catch (jsonError) {
       console.error('Error parsing JSON response:', jsonError);

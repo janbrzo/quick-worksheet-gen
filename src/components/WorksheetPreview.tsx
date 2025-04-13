@@ -47,6 +47,9 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
   const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [feedbackData, setFeedbackData] = useState<FeedbackData>({ rating: 0, comment: '' });
   
+  // State to track PDF generation in progress
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  
   // Toggle edit mode
   const handleEditToggle = () => {
     if (isEditing) {
@@ -81,9 +84,17 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
 
   // Download worksheet
   const downloadWorksheet = async () => {
+    if (isGeneratingPdf) {
+      toast.info("PDF generation already in progress. Please wait...");
+      return;
+    }
+    
     try {
+      setIsGeneratingPdf(true);
+      
       if (!studentContentRef.current && !teacherContentRef.current) {
         toast.error("Could not find content to download");
+        setIsGeneratingPdf(false);
         return;
       }
       
@@ -104,66 +115,29 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
             title: data.title,
             contentRef,
             viewMode,
-            vocabulary: [], // Don't include vocabulary twice
-            skipVocabularyPage: true,
+            vocabulary: data.vocabulary || [], 
             isExportMode: true
           });
           
           if (filename) {
             toast.success(`${viewMode === WorksheetView.STUDENT ? 'Student' : 'Teacher'} worksheet downloaded successfully!`);
-            
-            // Also generate the other view after a delay
-            setTimeout(() => {
-              downloadOtherView();
-            }, 1000);
           }
           
           // Disable export mode after PDF generation
           setIsExportMode(false);
+          setIsGeneratingPdf(false);
         } catch (err) {
           console.error("Download error:", err);
           toast.error("Error downloading worksheet. Please try again.");
           setIsExportMode(false);
+          setIsGeneratingPdf(false);
         }
-      }, 200); // Increased timeout to ensure DOM updates
+      }, 300); // Increased timeout to ensure DOM updates
     } catch (err) {
       console.error("Download error:", err);
       toast.error("Error downloading worksheet. Please try again.");
       setIsExportMode(false);
-    }
-  };
-  
-  // Download the opposite view
-  const downloadOtherView = async () => {
-    try {
-      // Determine which view to download (opposite of current view)
-      const otherView = viewMode === WorksheetView.STUDENT ? WorksheetView.TEACHER : WorksheetView.STUDENT;
-      const otherContentRef = otherView === WorksheetView.STUDENT ? studentContentRef : teacherContentRef;
-      
-      if (!otherContentRef.current) {
-        return;
-      }
-      
-      // Display processing message for other view
-      const viewName = otherView === WorksheetView.STUDENT ? "STUDENT" : "TEACHER";
-      toast.success(`Preparing ${viewName} worksheet for download...`);
-      
-      // Generate PDF for other view with export mode enabled
-      const filename = await generatePdf({
-        title: data.title,
-        contentRef: otherContentRef,
-        viewMode: otherView,
-        vocabulary: [], // Don't include vocabulary twice
-        skipVocabularyPage: true,
-        isExportMode: true
-      });
-      
-      if (filename) {
-        toast.success('Both worksheets downloaded successfully!');
-      }
-    } catch (err) {
-      console.error("Download error for other view:", err);
-      toast.error("Error with second worksheet. Please try downloading each view separately.");
+      setIsGeneratingPdf(false);
     }
   };
   
@@ -182,6 +156,7 @@ const WorksheetPreview: React.FC<WorksheetPreviewProps> = ({
         isEditing={isEditing}
         handleEditToggle={handleEditToggle}
         downloadWorksheet={downloadWorksheet}
+        isGeneratingPdf={isGeneratingPdf}
       />
 
       {/* Worksheet content */}

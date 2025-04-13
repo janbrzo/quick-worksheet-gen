@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { WorksheetView } from '@/types/worksheet';
-import { Download, Edit, Check, FileText, User, Lightbulb } from 'lucide-react';
+import { Download, Edit, Check, User, Lightbulb, Loader2 } from 'lucide-react';
 
 interface WorksheetToolbarProps {
   viewMode: WorksheetView;
@@ -10,6 +10,7 @@ interface WorksheetToolbarProps {
   isEditing: boolean;
   handleEditToggle: () => void;
   downloadWorksheet: () => void;
+  isGeneratingPdf?: boolean;
 }
 
 const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
@@ -17,7 +18,8 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
   setWorksheetView,
   isEditing,
   handleEditToggle,
-  downloadWorksheet
+  downloadWorksheet,
+  isGeneratingPdf = false
 }) => {
   return (
     <div className="sticky top-0 z-30 bg-gradient-to-r from-gray-50 to-white py-4 shadow-sm rounded-lg mb-6">
@@ -67,6 +69,7 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
                 : 'border-indigo-200 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
             }`}
             size="sm"
+            disabled={isGeneratingPdf}
           >
             {isEditing ? <><Check size={16} /> Save Changes</> : <><Edit size={16} /> Edit Worksheet</>}
           </Button>
@@ -74,9 +77,19 @@ const WorksheetToolbar: React.FC<WorksheetToolbarProps> = ({
             onClick={downloadWorksheet}
             className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white border-0 flex items-center gap-2 shadow-md whitespace-nowrap"
             size="sm"
+            disabled={isGeneratingPdf}
           >
-            <Download size={16} />
-            Download PDF
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                Download PDF
+              </>
+            )}
           </Button>
         </div>
       </div>
