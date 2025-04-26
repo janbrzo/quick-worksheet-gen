@@ -50,13 +50,6 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
-    /* Educational theme colors */
-    --edu-primary: 249 85% 56%;
-    --edu-secondary: 249 85% 56%;
-    --edu-accent: 190 95% 39%;
-    --edu-light: 226 100% 97%;
-    --edu-dark: 240 6% 10%;
   }
 
   .dark {
@@ -95,13 +88,6 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
-    /* Educational theme colors - dark mode */
-    --edu-primary: 249 85% 66%;
-    --edu-secondary: 249 85% 66%;
-    --edu-accent: 190 95% 49%;
-    --edu-light: 226 30% 20%;
-    --edu-dark: 240 6% 90%;
   }
 }
 
@@ -113,49 +99,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Custom classes for worksheet UI */
-.text-edu-primary {
-  color: hsl(var(--edu-primary));
-}
-
-.text-edu-secondary {
-  color: hsl(var(--edu-secondary));
-}
-
-.text-edu-accent {
-  color: hsl(var(--edu-accent));
-}
-
-.text-edu-dark {
-  color: hsl(var(--edu-dark));
-}
-
-.bg-edu-primary {
-  background-color: hsl(var(--edu-primary));
-}
-
-.bg-edu-secondary {
-  background-color: hsl(var(--edu-secondary));
-}
-
-.bg-edu-accent {
-  background-color: hsl(var(--edu-accent));
-}
-
-.bg-edu-light {
-  background-color: hsl(var(--edu-light));
-}
-
-.border-edu-primary {
-  border-color: hsl(var(--edu-primary));
-}
-
-.border-edu-secondary {
-  border-color: hsl(var(--edu-secondary));
-}
-
-.border-edu-accent {
-  border-color: hsl(var(--edu-accent));
 }

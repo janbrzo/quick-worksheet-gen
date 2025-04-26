@@ -63,12 +63,18 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				edu: {
-					'primary': '#2D72B2',
-					'secondary': '#3BACB6',
-					'accent': '#2F97C1',
-					'light': '#E9F6FC',
-					'dark': '#1B4965'
+				indigo: {
+					'50': '#f0f4ff',
+					'100': '#e0e9ff',
+					'200': '#c7d7fe',
+					'300': '#a4bafc',
+					'400': '#8194f8',
+					'500': '#6371f1',
+					'600': '#4d4fe4',
+					'700': '#4041c2',
+					'800': '#36389e',
+					'900': '#32357e',
+					'950': '#1e1e47',
 				}
 			},
 			borderRadius: {

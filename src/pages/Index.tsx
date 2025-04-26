@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import WorksheetForm from '@/components/WorksheetForm';
 import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
@@ -26,9 +26,6 @@ const Index = () => {
   } = useFormData();
   
   const [currentPage, setCurrentPage] = useState(1);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [paymentComplete, setPaymentComplete] = useState(true);
   const [showGenerationModal, setShowGenerationModal] = useState(false);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
@@ -159,7 +156,7 @@ const Index = () => {
               <div className="flex justify-between items-center mb-6">
                 <button 
                   onClick={() => goToPage(1)} 
-                  className="text-edu-primary hover:text-edu-dark flex items-center gap-1"
+                  className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                 >
                   <ArrowLeft size={18} />
                   Create New Worksheet
@@ -170,9 +167,9 @@ const Index = () => {
                 <WorksheetPreview 
                   data={worksheetData} 
                   viewMode={worksheetView}
-                  onDownload={() => paymentComplete ? null : setPaymentDialogOpen(true)}
+                  onDownload={() => null}
                   setWorksheetView={setWorksheetView}
-                  paymentComplete={paymentComplete}
+                  paymentComplete={true}
                 />
               )}
             </div>
@@ -183,7 +180,7 @@ const Index = () => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 bg-edu-primary text-white rounded-full shadow-lg hover:bg-edu-dark transition-colors z-50"
+          className="fixed bottom-6 right-6 p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors z-50"
           aria-label="Scroll to top"
         >
           <ArrowUp size={24} />

@@ -164,7 +164,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           value={formData.additionalInfo || ''}
           onChange={(e) => updateField('additionalInfo', e.target.value)}
           placeholder="E.g., Student has difficulty pronouncing 'r', Please include more IT examples"
-          className="w-full p-4 border border-gray-200 rounded-lg min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+          className="w-full p-4 border border-gray-200 rounded-lg min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 bg-gray-50"
         />
       </div>
 
