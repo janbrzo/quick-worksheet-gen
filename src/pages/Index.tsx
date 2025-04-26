@@ -1,16 +1,14 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import WorksheetForm from '@/components/WorksheetForm';
 import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
-import FeatureSection from '@/components/FeatureSection';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { FileText, ArrowUp, Zap, Database, ArrowLeft, Key } from 'lucide-react';
+import { ArrowUp, Key } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 const Index = () => {
   const {
@@ -26,39 +24,25 @@ const Index = () => {
     storeApiKey
   } = useFormData();
   
-  // State to control which page is visible
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // State for payment dialog
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [paymentComplete, setPaymentComplete] = useState(true); // Set to true to skip payment
-  
-  // State for generation modal
+  const [paymentComplete, setPaymentComplete] = useState(true);
   const [showGenerationModal, setShowGenerationModal] = useState(false);
-  
-  // State for API key modal
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
-  
-  // State for worksheet view (student/teacher)
   const [worksheetView, setWorksheetView] = useState<WorksheetView>(WorksheetView.STUDENT);
-
-  // For PDF generation
   const [showScrollTop, setShowScrollTop] = useState(false);
-  
-  // Function to handle page switching
+
   const goToPage = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo(0, 0);
   };
-  
-  // Effect to show generation modal
+
   useEffect(() => {
     if (generationStatus === GenerationStatus.GENERATING) {
       setShowGenerationModal(true);
     } else if (generationStatus === GenerationStatus.COMPLETED) {
-      // Close modal after a slight delay when generation is complete
       setTimeout(() => {
         setShowGenerationModal(false);
         goToPage(2);
@@ -66,7 +50,6 @@ const Index = () => {
     }
   }, [generationStatus]);
 
-  // Show scroll to top button when user scrolls down
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
@@ -76,15 +59,13 @@ const Index = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
   };
-  
-  // Handle API key submission
+
   const handleApiKeySubmit = () => {
     if (!apiKeyInput || apiKeyInput.trim().length < 10) {
       toast.error('Please enter a valid OpenAI API key');
@@ -97,60 +78,54 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-edu-dark text-white py-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Create Your Worksheet</h1>
-              <p className="text-edu-light mt-1">
-                Quick, professional English teaching materials in minutes
-              </p>
-            </div>
+          <div className="flex flex-col items-center text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              English Worksheet Generator
+            </h1>
+            <p className="text-xl text-indigo-100 max-w-2xl">
+              Create professional, tailored worksheets in minutes instead of hours
+            </p>
             
-            {/* Enhanced feature icons in header */}
-            <div className="grid grid-cols-4 gap-3 mt-4 md:mt-0">
-              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
-                <FileText className="h-4 w-4 mb-1" />
-                <span className="text-xs font-medium">Save Time</span>
-                <span className="text-xs hidden lg:block">5-min creation</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <p className="font-semibold">Save Time</p>
+                <p className="text-sm text-indigo-100">5-min creation</p>
               </div>
-              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
-                <Zap className="h-4 w-4 mb-1" />
-                <span className="text-xs font-medium">Tailored</span>
-                <span className="text-xs hidden lg:block">Industry-focused</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <p className="font-semibold">Tailored</p>
+                <p className="text-sm text-indigo-100">Industry-focused</p>
               </div>
-              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
-                <FileText className="h-4 w-4 mb-1" />
-                <span className="text-xs font-medium">Ready</span>
-                <span className="text-xs hidden lg:block">Professional format</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <p className="font-semibold">Ready</p>
+                <p className="text-sm text-indigo-100">Professional format</p>
               </div>
-              <div className="flex flex-col items-center text-center p-2 bg-white bg-opacity-20 rounded-md">
-                <FileText className="h-4 w-4 mb-1" />
-                <span className="text-xs font-medium">Customizable</span>
-                <span className="text-xs hidden lg:block">Easy to edit</span>
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                <p className="font-semibold">Customizable</p>
+                <p className="text-sm text-indigo-100">Easy to edit</p>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 pt-8 pb-16">
-        <main className="max-w-screen-xl mx-auto">
+      <div className="container mx-auto px-4 py-12">
+        <main className="max-w-4xl mx-auto">
           {currentPage === 1 && (
             <div className="w-full">
-              {/* API Key banner */}
               {!openAIKey && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-md">
+                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-md">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <Key className="h-5 w-5 text-yellow-400" />
+                      <Key className="h-5 w-5 text-amber-400" />
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm text-yellow-700">
+                      <p className="text-sm text-amber-700">
                         <span className="font-medium">OpenAI API Key Required</span>
                       </p>
-                      <p className="mt-1 text-sm text-yellow-600">
+                      <p className="mt-1 text-sm text-amber-600">
                         You need to provide an OpenAI API key to generate worksheets with AI. Without a key, mock data will be used instead.
                       </p>
                       <div className="mt-2">
@@ -158,7 +133,7 @@ const Index = () => {
                           variant="outline" 
                           size="sm" 
                           onClick={() => setShowApiKeyModal(true)}
-                          className="text-xs border-yellow-400 text-yellow-700 hover:bg-yellow-50"
+                          className="text-xs border-amber-400 text-amber-700 hover:bg-amber-50"
                         >
                           Add API Key
                         </Button>
@@ -171,9 +146,7 @@ const Index = () => {
               <WorksheetForm
                 formData={formData}
                 updateField={updateField}
-                generateWorksheet={() => {
-                  generateWorksheet();
-                }}
+                generateWorksheet={generateWorksheet}
                 resetForm={resetForm}
                 generationStatus={generationStatus}
               />
@@ -206,7 +179,6 @@ const Index = () => {
         </main>
       </div>
 
-      {/* Fixed scroll to top button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}
@@ -217,21 +189,19 @@ const Index = () => {
         </button>
       )}
 
-      {/* Generation Modal */}
       <Dialog open={showGenerationModal} onOpenChange={setShowGenerationModal}>
         <DialogContent className="sm:max-w-md">
           <div className="py-4">
             <GenerationProgress 
               status={generationStatus}
-              duration={60} // Longer animation duration 
+              duration={60}
               steps={generationSteps}
               currentTime={generationTime}
             />
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* API Key Modal */}
+
       <Dialog open={showApiKeyModal} onOpenChange={setShowApiKeyModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

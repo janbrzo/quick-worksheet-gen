@@ -96,29 +96,31 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md w-full">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-edu-dark">Create Your Worksheet</h2>
+    <div className="bg-white rounded-xl shadow-lg p-8 space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Create Your Worksheet
+        </h2>
         
-        <div className="flex gap-2 mt-4 md:mt-0">
+        <div className="flex gap-2">
           {['30', '45', '60'].map((duration) => (
             <button
               key={duration}
               type="button"
               onClick={() => updateField('lessonDuration', duration)}
-              className={`px-4 py-2 text-sm rounded-md border transition-all ${
+              className={`px-6 py-2.5 rounded-lg transition-all ${
                 formData.lessonDuration === duration
-                  ? 'bg-edu-primary text-white border-edu-primary'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-edu-light hover:border-edu-accent'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                  : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
               }`}
             >
-              {duration} minutes
+              {duration} min
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <TileSelector
           label="Lesson Topic*"
           placeholder="E.g., IT: debugging code, Business: negotiations"
@@ -136,9 +138,9 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
         />
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <TileSelector
-          label="Preferences*"
+          label="Teaching Preferences*"
           placeholder="E.g., Writing exercises, Dialogues"
           tiles={randomizedPreferences}
           value={formData.preferences}
@@ -154,7 +156,7 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
         />
       </div>
 
-      <div className="space-y-2 mb-6">
+      <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">
           Additional Information (optional)
         </label>
@@ -162,28 +164,28 @@ const WorksheetForm: React.FC<WorksheetFormProps> = ({
           value={formData.additionalInfo || ''}
           onChange={(e) => updateField('additionalInfo', e.target.value)}
           placeholder="E.g., Student has difficulty pronouncing 'r', Please include more IT examples"
-          className="w-full p-3 border border-gray-300 rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-edu-accent"
+          className="w-full p-4 border border-gray-200 rounded-lg min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
         />
       </div>
 
-      <div className="flex gap-4 justify-center md:justify-end mt-8">
+      <div className="flex gap-4 justify-center pt-6">
         {isCompleted && (
           <Button
             variant="outline"
             onClick={resetForm}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 px-8"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={20} />
             New Worksheet
           </Button>
         )}
         <Button
           onClick={generateWorksheet}
           disabled={isGenerating || !formData.lessonTopic || !formData.lessonObjective || !formData.preferences}
-          className="bg-edu-primary hover:bg-edu-dark text-white flex items-center gap-2 px-6 py-2 text-base"
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white flex items-center gap-2 px-8 py-6 text-lg rounded-lg shadow-md transition-all"
         >
           {isGenerating ? 'Generating...' : isCompleted ? 'Generate Again' : 'Generate Worksheet'}
-          {!isGenerating && <ArrowRight size={16} />}
+          {!isGenerating && <ArrowRight size={20} />}
         </Button>
       </div>
     </div>
