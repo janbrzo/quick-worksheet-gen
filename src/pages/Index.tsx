@@ -1,10 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import WorksheetForm from '@/components/WorksheetForm';
 import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { ArrowUp, Key } from 'lucide-react';
+import { ArrowUp, ArrowLeft, Key } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
