@@ -27,13 +27,7 @@ const TileSelector: React.FC<TileSelectorProps> = ({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
-          className={cn(
-            "w-full p-4 rounded-lg min-h-[100px] bg-gray-50",
-            "border border-gray-200 focus:border-indigo-500",
-            "focus:outline-none focus:ring-2 focus:ring-indigo-500/20",
-            "text-gray-700 placeholder-gray-400",
-            "transition-all duration-200"
-          )}
+          className="worksheet-input"
         />
       </div>
       <div className="flex flex-wrap gap-2 mt-3">
@@ -42,13 +36,7 @@ const TileSelector: React.FC<TileSelectorProps> = ({
             key={index}
             type="button"
             onClick={() => handleTileClick(tile)}
-            className={cn(
-              "px-4 py-2 text-sm rounded-lg transition-all",
-              "bg-gray-50 border border-gray-200",
-              "hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50",
-              "hover:border-indigo-200 hover:shadow-sm",
-              "focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            )}
+            className="worksheet-tile"
           >
             {tile}
           </button>

@@ -5,7 +5,7 @@ import WorksheetPreview from '@/components/WorksheetPreview';
 import GenerationProgress from '@/components/GenerationProgress';
 import { useFormData } from '@/hooks/useFormData';
 import { GenerationStatus, WorksheetView } from '@/types/worksheet';
-import { ArrowUp, ArrowLeft, Key } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Key } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,87 +76,51 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              English Worksheet Generator
-            </h1>
-            <p className="text-xl text-indigo-100 max-w-2xl">
-              Create professional, tailored worksheets in minutes instead of hours
-            </p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <p className="font-semibold">Save Time</p>
-                <p className="text-sm text-indigo-100">5-min creation</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <p className="font-semibold">Tailored</p>
-                <p className="text-sm text-indigo-100">Industry-focused</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <p className="font-semibold">Ready</p>
-                <p className="text-sm text-indigo-100">Professional format</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-                <p className="font-semibold">Customizable</p>
-                <p className="text-sm text-indigo-100">Easy to edit</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-12">
-        <main className="max-w-4xl mx-auto">
-          {currentPage === 1 && (
-            <div className="w-full">
-              {!openAIKey && (
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-md">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <Key className="h-5 w-5 text-amber-400" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-amber-700">
-                        <span className="font-medium">OpenAI API Key Required</span>
-                      </p>
-                      <p className="mt-1 text-sm text-amber-600">
-                        You need to provide an OpenAI API key to generate worksheets with AI. Without a key, mock data will be used instead.
-                      </p>
-                      <div className="mt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setShowApiKeyModal(true)}
-                          className="text-xs border-amber-400 text-amber-700 hover:bg-amber-50"
-                        >
-                          Add API Key
-                        </Button>
-                      </div>
-                    </div>
+    <div className="min-h-screen bg-gray-50 pb-16">
+      <div className="container mx-auto px-4 py-8">
+        <main className="max-w-6xl mx-auto">
+          {!openAIKey && (
+            <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-md">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <Key className="h-5 w-5 text-amber-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-amber-700">
+                    <span className="font-medium">OpenAI API Key Required</span>
+                  </p>
+                  <p className="mt-1 text-sm text-amber-600">
+                    You need to provide an OpenAI API key to generate worksheets with AI. Without a key, mock data will be used instead.
+                  </p>
+                  <div className="mt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowApiKeyModal(true)}
+                      className="text-xs border-amber-400 text-amber-700 hover:bg-amber-50"
+                    >
+                      Add API Key
+                    </Button>
                   </div>
                 </div>
-              )}
-              
-              <WorksheetForm
-                formData={formData}
-                updateField={updateField}
-                generateWorksheet={generateWorksheet}
-                resetForm={resetForm}
-                generationStatus={generationStatus}
-              />
+              </div>
             </div>
           )}
           
-          {currentPage === 2 && (
-            <div>
+          {currentPage === 1 ? (
+            <WorksheetForm
+              formData={formData}
+              updateField={updateField}
+              generateWorksheet={generateWorksheet}
+              resetForm={resetForm}
+              generationStatus={generationStatus}
+            />
+          ) : (
+            <>
               <div className="flex justify-between items-center mb-6">
                 <button 
                   onClick={() => goToPage(1)} 
-                  className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                  className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
                 >
                   <ArrowLeft size={18} />
                   Create New Worksheet
@@ -172,7 +136,7 @@ const Index = () => {
                   paymentComplete={true}
                 />
               )}
-            </div>
+            </>
           )}
         </main>
       </div>
@@ -180,7 +144,7 @@ const Index = () => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-colors z-50"
+          className="fixed bottom-6 right-6 p-3 bg-purple-main text-white rounded-full shadow-lg hover:bg-purple-hover transition-colors z-50"
           aria-label="Scroll to top"
         >
           <ArrowUp size={24} />
@@ -222,21 +186,12 @@ const Index = () => {
             <Button variant="outline" onClick={() => setShowApiKeyModal(false)}>
               Cancel
             </Button>
-            <Button onClick={handleApiKeySubmit}>
+            <Button onClick={handleApiKeySubmit} className="bg-purple-main hover:bg-purple-hover">
               Save API Key
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <footer className="bg-gray-100 border-t border-gray-200 py-6">
-        <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
-          <p>© 2023 Quick Worksheet Generator</p>
-          <p className="mt-2">
-            A tool for English teachers to quickly create professional teaching materials
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };

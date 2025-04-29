@@ -75,6 +75,14 @@ export default {
 					'800': '#36389e',
 					'900': '#32357e',
 					'950': '#1e1e47',
+				},
+				purple: {
+					light: 'hsl(var(--purple-light))',
+					main: 'hsl(var(--purple-main))',
+					hover: 'hsl(var(--purple-hover))',
+					text: 'hsl(var(--purple-text))',
+					border: 'hsl(var(--purple-border))',
+					dark: 'hsl(var(--purple-dark))',
 				}
 			},
 			borderRadius: {
